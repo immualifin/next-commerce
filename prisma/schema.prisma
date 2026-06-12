@@ -1,0 +1,203 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum RoleUser {
+  superadmin
+  customer
+}
+
+enum StockProduct {
+  ready
+  preorder
+}
+
+enum StatusOrder {
+  pending
+  success
+  failed
+}
+
+// ─── Better Auth Models ───────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  rule          RoleUser @default(customer)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions Session[]
+  accounts Account[]
+  orders   Order[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id                    String   @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verifications")
+}
+
+// ─── Ecommerce Models ─────────────────────────────────────────
+
+model Brand {
+  id        String   @id @default(cuid())
+  logo      String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@map("brands")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@map("locations")
+}
+
+model Product {
+  id         String @id @default(cuid())
+  brandId    String @map("brand_id")
+  categoryId String @map("category_id")
+  locationId String @map("location_id")
+
+  name        String
+  description String       @db.Text
+  price       BigInt       @db.BigInt
+  stock       StockProduct
+  image       String[]
+
+  brand     Brand    @relation(fields: [brandId], references: [id])
+  category  Category @relation(fields: [categoryId], references: [id])
+  location  Location @relation(fields: [locationId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders OrderProduct[]
+
+  @@map("products")
+}
+
+model Order {
+  id     String      @id @default(cuid())
+  code   String      @unique
+  userId String      @map("user_id")
+  total  Int
+  status StatusOrder
+
+  user      User         @relation(fields: [userId], references: [id])
+  detail    OrderDetail?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  products OrderProduct[]
+
+  @@map("orders")
+}
+
+model OrderDetail {
+  id      String @id @default(cuid())
+  orderId String @unique @map("order_id")
+
+  name       String   @db.VarChar(255)
+  phone      String   @db.VarChar(255)
+  address    String   @db.VarChar(255)
+  city       String   @db.VarChar(255)
+  postalCode String   @map("postal_code")
+  notes      String?  @db.VarChar(255)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("orders_detail")
+}
+
+model OrderProduct {
+  id        String @id @default(cuid())
+  productId String @map("product_id")
+  orderId   String @map("order_id")
+
+  subtotal  Int
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+
+  @@map("orders_products")
+}
