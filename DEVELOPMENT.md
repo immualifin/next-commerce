@@ -224,3 +224,231 @@ npx shadcn add <component>
 - Page components: `PascalCase` (export default)
 - Files: `kebab-case`
 - Server actions: `camelCase` with `Action` suffix
+
+---
+
+## Flows
+
+### Email/Password Sign-In
+
+```
+┌─────────────────────────────────────────────────────┐
+│ CLIENT (Browser)                                    │
+│                                                     │
+│  User fills email + password                        │
+│         │                                           │
+│         ▼                                           │
+│  <form action={formAction}>                         │
+│  useActionState(signInAction)                       │
+│         │                                           │
+└─────────┼───────────────────────────────────────────┘
+          │ POST (Server Action)
+          ▼
+┌─────────────────────────────────────────────────────┐
+│ SERVER (Node.js)                                    │
+│                                                     │
+│  signInAction(formData)                             │
+│         │                                           │
+│         ▼                                           │
+│  signInSchema.safeParse({ email, password })        │
+│         │                                           │
+│    ┌────┴────┐                                      │
+│    │ FAIL    │ PASS                                 │
+│    ▼         ▼                                      │
+│  return    auth.api.signInEmail({                   │
+│  {         │  body: { email, password }             │
+│   errors:  │  headers: new Headers()                │
+│  }         │ })                                     │
+│            │                                        │
+│            ▼                                        │
+│       Better Auth                                    │
+│         │                                           │
+│         ├─ Verify credentials (Account table)       │
+│         ├─ Create session (Session table)           │
+│         └─ Return Set-Cookie header                 │
+│            │                                        │
+│            ▼                                        │
+│       cookies().set(sessionToken)                   │
+│            │                                        │
+│            ▼                                        │
+│       redirect("/dashboard")                        │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────┐
+│ CLIENT (Browser)                                    │
+│                                                     │
+│  GET /dashboard                                     │
+│  Cookie: session_token=xxx                          │
+│         │                                           │
+│         ▼                                           │
+│  Server reads cookie → validateSession()            │
+│         │                                           │
+│    ┌────┴────┐                                      │
+│    │ INVALID │ VALID                                │
+│    ▼         ▼                                      │
+│  redirect   Render dashboard page                   │
+│  /sign-in   (user is authenticated)                 │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+### Google OAuth Sign-In
+
+```
+┌─────────────────────────────────────────────────────┐
+│ CLIENT                                             │
+│                                                     │
+│  User clicks "Google"                               │
+│         │                                           │
+│         ▼                                           │
+│  authClient.signIn.social({                         │
+│    provider: "google",                              │
+│    callbackURL: "/dashboard"                        │
+│  })                                                 │
+│         │                                           │
+│         ▼                                           │
+│  Redirect to Google                                 │
+│  https://accounts.google.com/o/oauth2/v2/auth       │
+│         │                                           │
+└─────────┼───────────────────────────────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────┐
+│ GOOGLE                                              │
+│                                                     │
+│  User consents / selects account                    │
+│         │                                           │
+│         ▼                                           │
+│  Redirect back to app                               │
+│  GET /api/auth/callback/google?code=xxx             │
+│                                                     │
+└─────────┬───────────────────────────────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────┐
+│ SERVER — Better Auth callback handler               │
+│                                                     │
+│  1. Exchange code for tokens (Google API)           │
+│  2. Fetch user profile from Google                  │
+│  3. Find or create User                             │
+│  4. Create Account (providerId: "google")            │
+│  5. Create Session                                  │
+│  6. Set session cookie                              │
+│  7. Redirect to callbackURL ("/dashboard")          │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+### Request Lifecycle (Route Group Layouts)
+
+```
+Request: GET /dashboard/sign-in
+│
+▼
+app/layout.tsx                    ← Root layout (<html>, <body>, fonts)
+│
+▼
+app/(admin)/dashboard/(auth)/layout.tsx  ← Auth wrapper (centered, muted bg, logo)
+│  children = <SignInPage />
+│
+▼
+app/(admin)/dashboard/(auth)/sign-in/page.tsx   ← Server Component
+│  renders <LoginForm />
+│
+▼
+components/login-form.tsx        ← Client Component ("use client")
+│  useActionState(signInAction)
+│  renders <form> with Input, Button
+│
+▼
+User submits → POST to signInAction (server)
+```
+
+### Prisma Migration Flow
+
+```
+Schema change
+│
+▼
+npx prisma migrate dev --name <name>
+│
+├─ 1. Read prisma/schema.prisma
+├─ 2. Read existing migrations/
+├─ 3. Compare schema vs database state
+├─ 4. Generate migration.sql (DDL)
+├─ 5. Apply migration → database (via DIRECT_URL port 5432)
+├─ 6. Record migration in _prisma_migrations table
+└─ 7. Regenerate @prisma/client
+│
+▼
+Database in sync with schema
+
+⚠️ DATABASE_URL (port 6543) = PgBouncer → for queries only
+⚠️ DIRECT_URL (port 5432)   = Session mode → for migrations (DDL)
+```
+
+### Session Validation Flow
+
+```
+Every request to protected route
+│
+▼
+Middleware / Server Component
+│
+▼
+Read session cookie from request headers
+│
+▼
+Better Auth: validateSession(token)
+│
+├─ Look up Session by token in database
+├─ Check expiresAt > now
+│  ├─ EXPIRED → delete session, clear cookie, redirect /sign-in
+│  └─ VALID  → extend expiresAt (sliding window), continue
+│
+▼
+User attached to request context
+│
+▼
+Page renders with authenticated user
+```
+
+### Component Data Flow
+
+```
+┌──────────────────────────────────────────────┐
+│                lib/validations.ts             │
+│  signInSchema: { email, password } (Zod)     │
+└──────────────────┬───────────────────────────┘
+                   │ imported by
+                   ▼
+┌──────────────────────────────────────────────┐
+│              .../sign-in/actions.ts           │
+│  signInAction(prevState, formData)           │
+│  "use server"                                │
+│                                              │
+│  1. Zod parse ← signInSchema                 │
+│  2. auth.api.signInEmail() ← lib/auth.ts     │
+│  3. cookies() ← next/headers                 │
+│  4. redirect() ← next/navigation             │
+└──────────────────┬───────────────────────────┘
+                   │ imported by
+                   ▼
+┌──────────────────────────────────────────────┐
+│            components/login-form.tsx          │
+│  "use client"                                │
+│                                              │
+│  useActionState(signInAction)                │
+│  <form action={formAction}>                  │
+│    <Input name="email" />                    │
+│    <Input name="password" />                 │
+│    <Button type="submit" />                  │
+│  </form>                                     │
+│                                              │
+│  state.errors.email[0] → field error         │
+│  state.message → general error               │
+│  isPending → loading spinner                 │
+└──────────────────────────────────────────────┘
+```
