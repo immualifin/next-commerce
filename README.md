@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next Commerce
+
+Ecommerce app built with Next.js 16, Prisma, and Better Auth.
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (Turbopack)
+- **Database**: PostgreSQL (Supabase)
+- **ORM**: Prisma 6
+- **Auth**: Better Auth (email/password + Google OAuth)
+- **UI**: Tailwind CSS 4 + shadcn
+- **Icons**: Lucide React
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Fill in DATABASE_URL, DIRECT_URL, BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+
+# Run database migration
+npx prisma migrate dev
+
+# Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/
+├── (admin)/
+│   └── dashboard/
+│       └── (auth)/
+│           ├── layout.tsx
+│           └── sign-in/
+│               └── page.tsx
+├── api/auth/[...all]/route.ts
+├── layout.tsx
+└── page.tsx
+components/
+├── login-form.tsx
+└── ui/          # shadcn components
+lib/
+├── auth.ts        # Better Auth server config
+├── auth-client.ts # Better Auth client
+├── prisma.ts      # Prisma singleton
+└── utils.ts       # shadcn utils
+prisma/
+└── schema.prisma
+```
