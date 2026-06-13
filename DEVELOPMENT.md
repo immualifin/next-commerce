@@ -38,6 +38,88 @@ npx prisma migrate dev
 npm run dev
 ```
 
+## Project Timeline
+
+Urutan pengerjaan project dari awal sampai sekarang.
+
+### Phase 1 — Bootstrap
+
+```
+npx create-next-app next-commerce
+```
+
+- Next.js 16.2.9 + React 19 + Tailwind CSS 4 + Turbopack
+- Git init, commit pertama
+
+### Phase 2 — Database
+
+```
+npm install prisma @prisma/client
+npx prisma init
+```
+
+| Step | Detail |
+|------|--------|
+| Setup Supabase | PostgreSQL di `ap-northeast-2` (Seoul) |
+| Prisma config | `prisma.config.ts` dengan `engine: "classic"`, dual URL (pooler + direct) |
+| Schema awal | 7 model ecommerce: User, Brand, Category, Location, Product, Order, OrderDetail, OrderProduct |
+| ID strategy | Awalnya `Int @autoincrement` → kemudian migrasi ke `String @cuid()` |
+| Migration | `npx prisma migrate dev --name init` |
+
+**Masalah & Solusi:**
+| Masalah | Penyebab | Solusi |
+|---------|----------|--------|
+| Migration hang | `DATABASE_URL` pakai PgBouncer (port 6543) — tidak support DDL | Tambah `directUrl` di `prisma.config.ts` mengarah ke port 5432 |
+| `allowScripts` mismatch | Versi di `package.json` salah (`prisma@7.8.0` padahal `6.19.3`) | Sesuaikan allowScripts ke versi aktual |
+| `npm audit fix --force` | Downgrade Next.js ke `9.3.3` | Kembalikan manual ke `^16.2.9`, jangan pakai `--force` |
+
+### Phase 3 — Auth
+
+```
+npm install better-auth
+```
+
+| Step | Detail |
+|------|--------|
+| Library | Better Auth 1.6.17 (Lucia deprecated, diganti) |
+| Plugin | `emailAndPassword` + `socialProviders.google` |
+| Schema update | Tambah model `Session`, `Account`, `Verification` (Better Auth) |
+| User model | Merge — tambah `emailVerified`, `image`, hapus `password` (pindah ke Account) |
+| API handler | `app/api/auth/[...all]/route.ts` via `toNextJsHandler(auth)` |
+| Server config | `lib/auth.ts` — prismaAdapter + plugins |
+| Client config | `lib/auth-client.ts` — createAuthClient |
+
+### Phase 4 — Sign-In Page
+
+| Step | Detail |
+|------|--------|
+| Route groups | `(admin)/dashboard/(auth)/sign-in` |
+| Layout | `(auth)/layout.tsx` — wrapper centered + logo Acme Inc. |
+| Page | `page.tsx` — server component, render `<LoginForm />` |
+| Component | `components/login-form.tsx` — client component, controlled form |
+| shadcn UI | `button`, `card`, `input`, `label` via `npx shadcn add` |
+
+### Phase 5 — Validation
+
+```
+npm install zod   # (sudah terinstall)
+```
+
+| Step | Detail |
+|------|--------|
+| Schema | `lib/validations.ts` — `signInSchema`, `signUpSchema` |
+| Server Action | `actions.ts` — Zod parse → Better Auth API → set cookie → redirect |
+| Pattern | `useActionState(signInAction)` — ganti dari controlled state + onSubmit |
+| Error handling | Field-level errors (`state.errors.email`) + general message (`state.message`) |
+| Google OAuth | Tetap client-side (`authClient.signIn.social()`) karena perlu browser redirect |
+
+### Phase 6 — Documentation
+
+| File | Isi |
+|------|-----|
+| `README.md` | Overview project, tech stack, struktur, quick start |
+| `DEVELOPMENT.md` | Panduan development lengkap + alur + timeline |
+
 ## Tech Stack
 
 | Layer | Technology |
