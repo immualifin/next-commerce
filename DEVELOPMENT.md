@@ -128,6 +128,7 @@ npm install zod   # (sudah terinstall)
 | Database | PostgreSQL (Supabase) |
 | ORM | Prisma 6 (`engine: "classic"`) |
 | Auth | Better Auth (email/password + Google OAuth) |
+| Password Hashing | scrypt (`node:crypto` native / `@noble/hashes` fallback) |
 | Validation | Zod (server actions) |
 | UI | Tailwind CSS 4 |
 | Components | shadcn (base-vega style, `components.json`) |
@@ -225,6 +226,27 @@ export const auth = betterAuth({
   },
   trustedOrigins: [process.env.BETTER_AUTH_URL ?? "http://localhost:3000"],
 });
+```
+
+### Password Hashing
+
+Better Auth menggunakan **scrypt**:
+
+| Runtime | Implementation |
+|---------|---------------|
+| Node.js | `node:crypto scrypt` (native, non-blocking via libuv thread pool) |
+| Edge / Browser | `@noble/hashes scrypt` (pure JavaScript fallback) |
+
+Password disimpan di tabel `Account` (kolom `password`) dengan format `$scrypt$...` — hash dan salt dalam satu string.
+
+Scrypt adalah **memory-hard KDF**, lebih tahan terhadap serangan GPU/ASIC dibanding bcrypt.
+
+```ts
+// Internal better-auth (tidak perlu dipanggil manual)
+import { hashPassword, verifyPassword } from "better-auth/crypto";
+
+const hashed = await hashPassword("user-password");     // → $scrypt$...
+const valid  = await verifyPassword(hashed, "user-password"); // → boolean
 ```
 
 ### Server Action Pattern

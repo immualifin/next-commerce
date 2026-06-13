@@ -7,7 +7,8 @@ Ecommerce app built with Next.js 16, Prisma, and Better Auth.
 - **Framework**: Next.js 16 (Turbopack)
 - **Database**: PostgreSQL (Supabase)
 - **ORM**: Prisma 6
-- **Auth**: Better Auth (email/password + Google OAuth)
+- **Auth**: Better Auth (email/password + Google OAuth, password: scrypt)
+- **Validation**: Zod (server actions)
 - **UI**: Tailwind CSS 4 + shadcn
 - **Icons**: Lucide React
 
@@ -47,10 +48,12 @@ components/
 ├── login-form.tsx
 └── ui/          # shadcn components
 lib/
-├── auth.ts        # Better Auth server config
-├── auth-client.ts # Better Auth client
-├── prisma.ts      # Prisma singleton
-└── utils.ts       # shadcn utils
+├── auth.ts          # Better Auth server config
+├── auth-client.ts   # Better Auth client
+├── prisma.ts        # Prisma singleton
+├── utils.ts         # shadcn utils
+└── validations.ts   # Zod schemas
 prisma/
-└── schema.prisma
+├── schema.prisma
+└── config.ts
 ```
