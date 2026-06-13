@@ -205,10 +205,32 @@ All models use `String @id @default(cuid())` for primary keys.
 ### Migrations
 
 ```bash
-npx prisma migrate dev --name <name>    # create + apply
-npx prisma generate                     # regenerate client
-npx prisma studio                       # GUI browser
+# Development (interactive)
+npx prisma migrate dev --name <name>
+
+# Non-interactive
+npx prisma db push            # push schema without migration file
+npx prisma db push --accept-data-loss   # force when warned
+
+npx prisma generate           # regenerate client
+npx prisma studio             # GUI browser
 ```
+
+### Seed (Superadmin)
+
+```bash
+npx tsx prisma/seed.ts
+```
+
+Default credentials:
+
+| Field | Value |
+|-------|-------|
+| Email | `admin@example.com` |
+| Password | `admin123456` |
+| Role | `superadmin` |
+
+Seed menggunakan `hashPassword` dari `better-auth/crypto` (scrypt) + Prisma langsung insert ke `User` dan `Account`.
 
 ## Auth
 

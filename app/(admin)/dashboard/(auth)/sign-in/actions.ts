@@ -2,12 +2,11 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
 import { signInSchema } from "@/lib/validations";
 
 export async function signInAction(
   prevState: SignInState,
-  formData: FormData,
+  formData: FormData
 ): Promise<SignInState> {
   const parsed = signInSchema.safeParse({
     email: formData.get("email"),
@@ -24,21 +23,28 @@ export async function signInAction(
   const { email, password } = parsed.data;
 
   try {
-    const response = await auth.api.signInEmail({
-      body: { email, password },
-      headers: new Headers(),
+    const baseUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+
+    const res = await fetch(`${baseUrl}/api/auth/sign-in/email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: baseUrl,
+      },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
+    const data = await res.json();
+
+    if (!res.ok || data.redirect !== false) {
       return {
         errors: null,
-        message: body?.message ?? "Invalid email or password",
+        message: data.message ?? "Invalid email or password",
       };
     }
 
-    // Forward cookies from better-auth response
-    const setCookie = response.headers.getSetCookie();
+    // Forward session cookie from Better Auth response
+    const setCookie = res.headers.getSetCookie();
     if (setCookie) {
       const cookieStore = await cookies();
       for (const cookie of setCookie) {
@@ -52,7 +58,8 @@ export async function signInAction(
         });
       }
     }
-  } catch {
+  } catch (e) {
+    console.error("[signInAction]", e);
     return {
       errors: null,
       message: "Something went wrong. Please try again.",
