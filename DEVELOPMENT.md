@@ -120,6 +120,71 @@ npm install zod   # (sudah terinstall)
 | `README.md` | Overview project, tech stack, struktur, quick start |
 | `DEVELOPMENT.md` | Panduan development lengkap + alur + timeline |
 
+### Phase 7 — Dashboard Installation
+
+```
+npx shadcn add "@shadcn/dashboard-01"
+```
+
+| Step | Detail |
+|------|--------|
+| Block | Dashboard-01 dari shadcn registry (new-york-v4 style) |
+| Dependencies | `recharts`, `@tanstack/react-table`, `@dnd-kit/*` (4), `sonner`, `next-themes`, `vaul`, `zod` |
+| UI components | 21 komponen baru: sidebar, table, chart, dropdown-menu, badge, select, tabs, sheet, dll |
+| Custom components | 8 komponen: app-sidebar, chart-area-interactive, data-table, nav-*, section-cards, site-header |
+| Layout | Dashboard shell (SidebarProvider + AppSidebar + SiteHeader + SidebarInset) |
+| TooltipProvider | Ditambahkan di root `app/layout.tsx` (diperlukan oleh sidebar) |
+
+### Phase 8 — Sidebar Customization
+
+| Step | Detail |
+|------|--------|
+| Menu items | Ganti placeholder SaaS → ecommerce: Dashboard, Products, Orders, Customers, Brands, Categories, Locations |
+| Secondary nav | Settings, Help (simplified) |
+| Documents section | Dihapus (tidak relevan untuk ecommerce) |
+| Branding | "Acme Inc." → "NextCommerce" |
+| User info | "shadcn" → "Admin" / "admin@example.com" |
+| Header title | "Documents" → "Dashboard" |
+
+### Phase 9 — Routing
+
+| Step | Detail |
+|------|--------|
+| Dashboard layout | `app/(admin)/dashboard/layout.tsx` — shared shell untuk semua dashboard pages |
+| Index page | Di-simplify — hanya konten (section cards + chart + data table) tanpa shell |
+| 8 route pages | products, orders, customers, brands, categories, locations, settings, help — masing-masing placeholder |
+
+### Phase 10 — Authentication Flows
+
+| Step | Detail |
+|------|--------|
+| Logout | `nav-user.tsx` — `authClient.signOut()` + `router.push("/dashboard/sign-in")` |
+| Active state | `nav-main.tsx` + `nav-secondary.tsx` — `usePathname()` + `isActive` prop |
+| Navigation fix | `SidebarMenuButton` + `render={<Link href={url} />}` untuk client-side navigation |
+| Active logic | `/dashboard` = strict match, sub-routes = `startsWith` prefix match |
+
+### Phase 11 — Full CRUD
+
+| Step | Detail |
+|------|--------|
+| Validation schemas | 6 schema baru di `lib/validations.ts`: brand, category, location, product, customer, order |
+| Server actions | `createXAction`, `updateXAction`, `deleteXAction` per entity — Zod parse → Prisma → revalidatePath |
+| Form components | `<entity>-form.tsx` — client component, Sheet modal, `useActionState`, field errors + toast |
+| List components | `<entity>-list.tsx` — client component, Table + edit/delete actions, `useTransition` for async delete |
+| Pages | Server component → fetch via Prisma → pass ke client list component |
+| Pattern | `JSON.parse(JSON.stringify(data))` untuk serialisasi server→client |
+
+**Entity details:**
+
+| Entity | Complexity | Special handling |
+|--------|-----------|------------------|
+| Brand | Simple | name + logo URL |
+| Category | Simple | name only |
+| Location | Simple | name only |
+| Product | Medium | FK (brand, category, location), BigInt price, enum stock, image array (comma-split), `<textarea>` |
+| Customer | Medium | Edit only (no create — users come from Better Auth), role enum |
+| Order | Complex | Order + OrderDetail via `$transaction`, upsert detail on edit, detail viewer Sheet |
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -129,9 +194,14 @@ npm install zod   # (sudah terinstall)
 | ORM | Prisma 6 (`engine: "classic"`) |
 | Auth | Better Auth (email/password + Google OAuth) |
 | Password Hashing | scrypt (`node:crypto` native / `@noble/hashes` fallback) |
-| Validation | Zod (server actions) |
+| Validation | Zod 4 (server actions) |
 | UI | Tailwind CSS 4 |
-| Components | shadcn (base-vega style, `components.json`) |
+| Components | shadcn v4 (base-vega style, `@base-ui/react`) |
+| Charts | Recharts 3 |
+| Table | @tanstack/react-table + @dnd-kit |
+| Toast | Sonner |
+| Theme | next-themes |
+| Drawer | Vaul |
 | Icons | Lucide React |
 
 ## Project Structure
@@ -140,29 +210,72 @@ npm install zod   # (sudah terinstall)
 app/
 ├── (admin)/
 │   └── dashboard/
-│       └── (auth)/              # auth layout wrapper
-│           ├── layout.tsx        # centered + logo
-│           └── sign-in/
-│               ├── page.tsx      # <LoginForm />
-│               └── actions.ts    # server action
+│       ├── layout.tsx              # Shared shell: SidebarProvider + AppSidebar + SiteHeader
+│       ├── (index)/
+│       │   ├── page.tsx            # Dashboard overview (charts + data table)
+│       │   └── data.json           # Sample data for table
+│       ├── (auth)/                 # auth layout wrapper
+│       │   ├── layout.tsx          # centered + logo
+│       │   └── sign-in/
+│       │       ├── page.tsx        # <LoginForm />
+│       │       └── actions.ts      # server action
+│       ├── products/
+│       │   ├── page.tsx            # Server fetch → ProductList
+│       │   └── actions.ts          # CRUD server actions
+│       ├── orders/
+│       │   ├── page.tsx
+│       │   └── actions.ts
+│       ├── customers/
+│       │   ├── page.tsx
+│       │   └── actions.ts
+│       ├── brands/
+│       │   ├── page.tsx
+│       │   └── actions.ts
+│       ├── categories/
+│       │   ├── page.tsx
+│       │   └── actions.ts
+│       ├── locations/
+│       │   ├── page.tsx
+│       │   └── actions.ts
+│       ├── settings/
+│       │   └── page.tsx
+│       └── help/
+│           └── page.tsx
 ├── api/
 │   └── auth/
 │       └── [...all]/
-│           └── route.ts          # Better Auth API handler
-├── layout.tsx
+│           └── route.ts            # Better Auth API handler
+├── layout.tsx                      # Root layout + TooltipProvider
 └── page.tsx
 components/
-├── login-form.tsx
-└── ui/                          # shadcn components
+├── app-sidebar.tsx                 # Sidebar shell + menu data (7 main items)
+├── nav-main.tsx                    # Main nav (Link + usePathname active state)
+├── nav-secondary.tsx               # Secondary nav (Settings, Help)
+├── nav-user.tsx                    # User dropdown (avatar + logout)
+├── site-header.tsx                 # Top header bar
+├── section-cards.tsx               # Dashboard 4 metric cards
+├── chart-area-interactive.tsx      # Dashboard interactive chart
+├── data-table.tsx                  # Dashboard sortable data table
+├── login-form.tsx                  # Sign-in form (useActionState)
+├── brand-form.tsx / brand-list.tsx
+├── category-form.tsx / category-list.tsx
+├── location-form.tsx / location-list.tsx
+├── product-form.tsx / product-list.tsx
+├── customer-form.tsx / customer-list.tsx
+├── order-form.tsx / order-list.tsx
+└── ui/                             # 22 shadcn v4 components (@base-ui/react)
+hooks/
+└── use-mobile.ts                   # Mobile breakpoint detection
 lib/
-├── auth.ts                      # Better Auth server config
-├── auth-client.ts               # Better Auth client (for OAuth)
-├── prisma.ts                    # Prisma singleton
-├── utils.ts                     # cn() helper
-└── validations.ts               # Zod schemas
+├── auth.ts                         # Better Auth server config
+├── auth-client.ts                  # Better Auth client (for OAuth + signOut)
+├── prisma.ts                       # Prisma singleton
+├── utils.ts                        # cn() helper
+└── validations.ts                  # Zod schemas (auth + 6 entity schemas)
 prisma/
-├── schema.prisma
-├── config.ts                    # Prisma 6 config
+├── schema.prisma                   # Auth + ecommerce models (11 total)
+├── seed.ts                         # Superadmin seeder
+├── config.ts                       # Prisma 6 config
 └── migrations/
 ```
 
@@ -171,9 +284,25 @@ prisma/
 | Group | Path | URL |
 |-------|------|-----|
 | `(admin)` | Admin pages | `/dashboard` |
+| `(index)` | Dashboard index | `/dashboard` |
 | `(auth)` | Auth pages | `/dashboard/sign-in` |
 
 Route groups don't affect the URL — they only organize layout inheritance.
+
+## Routes
+
+| URL | Page | Type |
+|-----|------|------|
+| `/dashboard` | Dashboard overview (charts + cards + table) | Server + Client |
+| `/dashboard/sign-in` | Sign in (email/password + Google OAuth) | Server + Client |
+| `/dashboard/products` | Product catalog CRUD | Server + Client |
+| `/dashboard/orders` | Order management + shipping detail viewer | Server + Client |
+| `/dashboard/customers` | User management (edit/delete only) | Server + Client |
+| `/dashboard/brands` | Brand CRUD | Server + Client |
+| `/dashboard/categories` | Category CRUD | Server + Client |
+| `/dashboard/locations` | Location CRUD | Server + Client |
+| `/dashboard/settings` | App settings (placeholder) | Server |
+| `/dashboard/help` | Help & docs (placeholder) | Server |
 
 ## Database
 
@@ -331,13 +460,109 @@ npx shadcn add <component>
 
 `base-vega` style with neutral color, CSS variables, Lucide icons (see `components.json`).
 
+## CRUD Architecture
+
+### Pattern per Entity
+
+```
+┌─────────────────────────────────────────────────────┐
+│ page.tsx (Server Component)                         │
+│                                                     │
+│  const data = await prisma.<entity>.findMany()      │
+│  return <XList data={JSON.parse(JSON.stringify())}> │
+└──────────────────────┬──────────────────────────────┘
+                       │ props
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│ <entity>-list.tsx (Client Component)                │
+│                                                     │
+│  - Table with row data                              │
+│  - Edit button → setEditing(row) → open Sheet       │
+│  - Delete button → useTransition → deleteAction()   │
+│  - New button → open Sheet (editing=null)           │
+│  - Sheet wraps <EntityForm>                         │
+└──────────────────────┬──────────────────────────────┘
+                       │ props (open, onOpenChange, entity)
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│ <entity>-form.tsx (Client Component)                │
+│                                                     │
+│  - useActionState(createAction | updateAction)      │
+│  - <form action={formAction}>                       │
+│  - Input/Select/textarea with name attributes       │
+│  - Field errors: state.errors.field[0]              │
+│  - Toast on success (useEffect)                     │
+└──────────────────────┬──────────────────────────────┘
+                       │ form POST
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│ actions.ts (Server Actions)                         │
+│                                                     │
+│  createXAction(prevState, formData)                 │
+│    → schema.safeParse(formData)                     │
+│    → prisma.<entity>.create(data)                   │
+│    → revalidatePath("/dashboard/<entity>")           │
+│    → return { errors, message }                     │
+│                                                     │
+│  updateXAction(id, prevState, formData)              │
+│    → schema.safeParse(formData)                     │
+│    → prisma.<entity>.update({ where: { id } })      │
+│    → revalidatePath(...)                            │
+│                                                     │
+│  deleteXAction(id)                                  │
+│    → prisma.<entity>.delete({ where: { id } })      │
+│    → revalidatePath(...)                            │
+└─────────────────────────────────────────────────────┘
+```
+
+### Form Validation Pattern
+
+```ts
+// lib/validations.ts
+export const brandSchema = z.object({
+  name: z.string().min(1, "Brand name is required"),
+  logo: z.string().min(1, "Logo URL is required"),
+});
+
+// actions.ts
+const parsed = brandSchema.safeParse({
+  name: formData.get("name"),
+  logo: formData.get("logo"),
+});
+if (!parsed.success) {
+  return { errors: parsed.error.flatten().fieldErrors, message: null };
+}
+```
+
+### Serialization
+
+Server components pass data to client components via props. Prisma types (BigInt, Date, Decimal) don't survive serialization:
+
+```tsx
+// Server component — always serialize
+<BrandList brands={JSON.parse(JSON.stringify(brands))} />
+```
+
+### Product-specific patterns
+
+- **price** (BigInt): Form input as string → `BigInt(price)` in action
+- **image** (String[]): Comma-separated string input → `.split(",").map(s => s.trim()).filter(Boolean)`
+- **stock** (enum): Select component with `StockProduct` values
+- **FK selects**: Brand, Category, Location dropdowns fetched in page, passed as props
+
+### Order-specific patterns
+
+- **Order + OrderDetail**: Created together in `prisma.$transaction()`
+- **Update**: `orderDetail.upsert()` (create if not exists, update if exists)
+- **Detail viewer**: Separate Sheet showing shipping info (read-only)
+
 ## Conventions
 
 ### Client / Server Boundaries
 
 - **Server Components** (default): pages, layouts, actions
-- **Client Components** (`"use client"`): forms, interactive UI
-- **Server Actions**: validate + mutate + redirect
+- **Client Components** (`"use client"`): forms, interactive UI, lists with state
+- **Server Actions**: validate + mutate + redirect / revalidatePath
 
 ### Imports
 
@@ -350,6 +575,8 @@ npx shadcn add <component>
 - Page components: `PascalCase` (export default)
 - Files: `kebab-case`
 - Server actions: `camelCase` with `Action` suffix
+- Form components: `<entity>-form.tsx`
+- List components: `<entity>-list.tsx`
 
 ---
 
