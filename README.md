@@ -44,6 +44,14 @@ Open [http://localhost:3000](http://localhost:3000).
 | Email | `admin@example.com` |
 | Password | `admin123456` |
 
+## Database Viewer
+
+```bash
+npx prisma studio
+```
+
+Opens Prisma Studio at [http://localhost:5555](http://localhost:5555) — a visual GUI to browse, edit, and filter all 11 tables.
+
 ## Project Structure
 
 ```
