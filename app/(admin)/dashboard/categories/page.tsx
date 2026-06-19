@@ -1,5 +1,6 @@
 import { LayoutGridIcon } from "lucide-react"
 import prisma from "@/lib/prisma"
+import { serialize } from "@/lib/utils"
 import { CategoryList } from "@/components/category-list"
 
 export default async function CategoriesPage() {
@@ -14,7 +15,7 @@ export default async function CategoriesPage() {
             <h1 className="text-xl font-semibold">Categories</h1>
           </div>
           <p className="mt-1 mb-6 text-sm text-muted-foreground">Manage product categories.</p>
-          <CategoryList categories={JSON.parse(JSON.stringify(categories))} />
+          <CategoryList categories={serialize(categories)} />
         </div>
       </div>
     </div>

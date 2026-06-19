@@ -172,7 +172,7 @@ npx shadcn add "@shadcn/dashboard-01"
 | Form components | `<entity>-form.tsx` — client component, Sheet modal, `useActionState`, field errors + toast |
 | List components | `<entity>-list.tsx` — client component, Table + edit/delete actions, `useTransition` for async delete |
 | Pages | Server component → fetch via Prisma → pass ke client list component |
-| Pattern | `JSON.parse(JSON.stringify(data))` untuk serialisasi server→client |
+| Pattern | `serialize(data)` untuk serialisasi server→client (handle BigInt) |
 
 **Entity details:**
 
@@ -270,7 +270,7 @@ lib/
 ├── auth.ts                         # Better Auth server config
 ├── auth-client.ts                  # Better Auth client (for OAuth + signOut)
 ├── prisma.ts                       # Prisma singleton
-├── utils.ts                        # cn() helper
+├── utils.ts                        # cn(), serialize() helpers
 └── validations.ts                  # Zod schemas (auth + 6 entity schemas)
 prisma/
 ├── schema.prisma                   # Auth + ecommerce models (11 total)
@@ -469,7 +469,7 @@ npx shadcn add <component>
 │ page.tsx (Server Component)                         │
 │                                                     │
 │  const data = await prisma.<entity>.findMany()      │
-│  return <XList data={JSON.parse(JSON.stringify())}> │
+│  return <XList data={serialize(data)}>              │
 └──────────────────────┬──────────────────────────────┘
                        │ props
                        ▼
@@ -536,12 +536,14 @@ if (!parsed.success) {
 
 ### Serialization
 
-Server components pass data to client components via props. Prisma types (BigInt, Date, Decimal) don't survive serialization:
+Server components pass data to client components via props. Prisma types (BigInt, Date, Decimal) don't survive serialization. Use the `serialize()` helper from `lib/utils.ts`:
 
 ```tsx
 // Server component — always serialize
-<BrandList brands={JSON.parse(JSON.stringify(brands))} />
+<BrandList brands={serialize(brands)} />
 ```
+
+`serialize()` wraps `JSON.parse(JSON.stringify(...))` with a BigInt-aware replacer — this avoids the `"Do not know how to serialize a BigInt"` error for fields like `price` (BigInt in Prisma).
 
 ### Product-specific patterns
 

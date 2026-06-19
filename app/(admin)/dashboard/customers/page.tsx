@@ -1,5 +1,6 @@
 import { UsersIcon } from "lucide-react"
 import prisma from "@/lib/prisma"
+import { serialize } from "@/lib/utils"
 import { CustomerList } from "@/components/customer-list"
 
 export default async function CustomersPage() {
@@ -17,7 +18,7 @@ export default async function CustomersPage() {
             <h1 className="text-xl font-semibold">Customers</h1>
           </div>
           <p className="mt-1 mb-6 text-sm text-muted-foreground">View and manage customer accounts.</p>
-          <CustomerList customers={JSON.parse(JSON.stringify(customers))} />
+          <CustomerList customers={serialize(customers)} />
         </div>
       </div>
     </div>

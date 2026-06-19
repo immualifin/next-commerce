@@ -1,5 +1,6 @@
 import { TagIcon } from "lucide-react"
 import prisma from "@/lib/prisma"
+import { serialize } from "@/lib/utils"
 import { BrandList } from "@/components/brand-list"
 
 export default async function BrandsPage() {
@@ -18,7 +19,7 @@ export default async function BrandsPage() {
           <p className="mt-1 mb-6 text-sm text-muted-foreground">
             Manage product brands.
           </p>
-          <BrandList brands={JSON.parse(JSON.stringify(brands))} />
+          <BrandList brands={serialize(brands)} />
         </div>
       </div>
     </div>

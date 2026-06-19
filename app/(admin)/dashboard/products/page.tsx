@@ -1,5 +1,6 @@
 import { PackageIcon } from "lucide-react"
 import prisma from "@/lib/prisma"
+import { serialize } from "@/lib/utils"
 import { ProductList } from "@/components/product-list"
 
 export default async function ProductsPage() {
@@ -23,10 +24,10 @@ export default async function ProductsPage() {
           </div>
           <p className="mt-1 mb-6 text-sm text-muted-foreground">Manage your product catalog.</p>
           <ProductList
-            products={JSON.parse(JSON.stringify(products))}
-            brands={JSON.parse(JSON.stringify(brands))}
-            categories={JSON.parse(JSON.stringify(categories))}
-            locations={JSON.parse(JSON.stringify(locations))}
+            products={serialize(products)}
+            brands={serialize(brands)}
+            categories={serialize(categories)}
+            locations={serialize(locations)}
           />
         </div>
       </div>

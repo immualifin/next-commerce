@@ -1,5 +1,6 @@
 import { ClipboardListIcon } from "lucide-react"
 import prisma from "@/lib/prisma"
+import { serialize } from "@/lib/utils"
 import { OrderList } from "@/components/order-list"
 
 export default async function OrdersPage() {
@@ -24,8 +25,8 @@ export default async function OrdersPage() {
           </div>
           <p className="mt-1 mb-6 text-sm text-muted-foreground">Track and manage customer orders.</p>
           <OrderList
-            orders={JSON.parse(JSON.stringify(orders))}
-            users={JSON.parse(JSON.stringify(users))}
+            orders={serialize(orders)}
+            users={serialize(users)}
           />
         </div>
       </div>

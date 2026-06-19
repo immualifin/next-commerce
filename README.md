@@ -105,7 +105,7 @@ lib/
 ├── auth.ts                         # Better Auth server config
 ├── auth-client.ts                  # Better Auth client
 ├── prisma.ts                       # Prisma singleton
-├── utils.ts                        # cn() helper
+├── utils.ts                        # cn(), serialize() helpers
 └── validations.ts                  # Zod schemas (auth + 6 entities)
 hooks/
 └── use-mobile.ts                   # Mobile detection hook

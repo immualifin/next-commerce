@@ -1,5 +1,6 @@
 import { MapPinIcon } from "lucide-react"
 import prisma from "@/lib/prisma"
+import { serialize } from "@/lib/utils"
 import { LocationList } from "@/components/location-list"
 
 export default async function LocationsPage() {
@@ -14,7 +15,7 @@ export default async function LocationsPage() {
             <h1 className="text-xl font-semibold">Locations</h1>
           </div>
           <p className="mt-1 mb-6 text-sm text-muted-foreground">Manage warehouse and store locations.</p>
-          <LocationList locations={JSON.parse(JSON.stringify(locations))} />
+          <LocationList locations={serialize(locations)} />
         </div>
       </div>
     </div>
