@@ -185,6 +185,32 @@ npx shadcn add "@shadcn/dashboard-01"
 | Customer | Medium | Edit only (no create — users come from Better Auth), role enum |
 | Order | Complex | Order + OrderDetail via `$transaction`, upsert detail on edit, detail viewer Sheet |
 
+### Phase 12 — Soft Delete / Trash
+
+| Step | Detail |
+|------|--------|
+| Schema update | Tambah `deletedAt DateTime?` ke 6 model ecommerce (Brand, Category, Location, Product, Order) + User |
+| Soft delete | `deleteXAction` tidak lagi hard-delete — set `deletedAt` ke `new Date()` |
+| Restore | `restoreXAction` baru — set `deletedAt` ke `null` |
+| Permanent delete | `permanentDeleteXAction` baru — hard-delete + cascade (e.g. brand → products → orderProducts) |
+| Trash UI | Tabs Active/Trash di setiap list component (`?tab=trash`) — `useRouter().push()` untuk switch |
+| Page filter | `searchParams.tab` → `prisma.findMany({ where: { deletedAt: isTrash ? { not: null } : null } })` |
+| Trash columns | Tampilkan `deletedAt` date di trash view |
+| Restore button | Tombol restore dengan icon `RotateCcwIcon` di trash tab |
+| Permanent delete button | Tombol delete permanen (merah) di trash tab |
+| Cascade handling | Permanent delete entity dengan FK constraints via `prisma.$transaction()` (e.g. brand → cascade delete semua products dan order references) |
+
+**Entity soft-delete details:**
+
+| Entity | Cascade on permanent delete |
+|--------|---------------------------|
+| Brand | Delete all products under brand + their OrderProduct references |
+| Category | Direct delete (no FK cascade needed) |
+| Location | Direct delete (no FK cascade needed) |
+| Product | Delete all OrderProduct references, then delete product |
+| Customer | Direct delete (user may have sessions/accounts — handled separately) |
+| Order | Delete OrderDetail + OrderProduct references, then delete order |
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -478,9 +504,12 @@ npx shadcn add <component>
 │                                                     │
 │  - Table with row data                              │
 │  - Edit button → setEditing(row) → open Sheet       │
-│  - Delete button → useTransition → deleteAction()   │
-│  - New button → open Sheet (editing=null)           │
-│  - Sheet wraps <EntityForm>                         │
+│  - Delete button → useTransition → deleteAction() (soft)    │
+│  - Restore button (trash tab) → restoreAction()             │
+│  - Permanent delete button (trash tab) → permanentDelete()  │
+│  - Active/Trash tabs → searchParams ?tab=trash              │
+│  - New button → open Sheet (active tab only)                │
+│  - Sheet wraps <EntityForm>                                 │
 └──────────────────────┬──────────────────────────────┘
                        │ props (open, onOpenChange, entity)
                        ▼
@@ -510,8 +539,16 @@ npx shadcn add <component>
 │    → revalidatePath(...)                            │
 │                                                     │
 │  deleteXAction(id)                                  │
-│    → prisma.<entity>.delete({ where: { id } })      │
+│    → prisma.<entity>.update({ deletedAt: new Date() }) │
+│    → revalidatePath(...) (soft delete)              │
+│                                                     │
+│  restoreXAction(id)                                 │
+│    → prisma.<entity>.update({ deletedAt: null })    │
 │    → revalidatePath(...)                            │
+│                                                     │
+│  permanentDeleteXAction(id)                         │
+│    → prisma.$transaction([...cascade deletes...])   │
+│    → revalidatePath(...) (hard delete)              │
 └─────────────────────────────────────────────────────┘
 ```
 

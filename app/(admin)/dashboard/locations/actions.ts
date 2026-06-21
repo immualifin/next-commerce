@@ -52,10 +52,45 @@ export async function updateLocationAction(
 
 export async function deleteLocationAction(id: string) {
   try {
-    await prisma.location.delete({ where: { id } })
+    await prisma.location.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    })
   } catch {
     return { message: "Failed to delete location." }
   }
   revalidatePath("/dashboard/locations")
-  return { message: "Location deleted successfully." }
+  return { message: "Location moved to trash." }
+}
+
+export async function restoreLocationAction(id: string) {
+  try {
+    await prisma.location.update({
+      where: { id },
+      data: { deletedAt: null },
+    })
+  } catch {
+    return { message: "Failed to restore location." }
+  }
+  revalidatePath("/dashboard/locations")
+  return { message: "Location restored successfully." }
+}
+
+export async function permanentDeleteLocationAction(id: string) {
+  try {
+    await prisma.$transaction(async (tx) => {
+      const products = await tx.product.findMany({ where: { locationId: id }, select: { id: true } })
+      const productIds = products.map((p) => p.id)
+      if (productIds.length > 0) {
+        await tx.orderProduct.deleteMany({ where: { productId: { in: productIds } } })
+        await tx.product.deleteMany({ where: { locationId: id } })
+      }
+      await tx.location.delete({ where: { id } })
+    })
+  } catch (e) {
+    console.error("[permanentDeleteLocation]", e)
+    return { message: "Failed to permanently delete location." }
+  }
+  revalidatePath("/dashboard/locations")
+  return { message: "Location permanently deleted." }
 }

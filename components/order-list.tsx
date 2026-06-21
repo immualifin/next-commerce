@@ -3,9 +3,10 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { PencilIcon, Trash2Icon, PlusIcon, EyeIcon } from "lucide-react"
+import { PencilIcon, Trash2Icon, PlusIcon, EyeIcon, RotateCcwIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
   TableBody,
@@ -22,7 +23,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { OrderForm } from "@/components/order-form"
-import { deleteOrderAction } from "@/app/(admin)/dashboard/orders/actions"
+import { deleteOrderAction, restoreOrderAction, permanentDeleteOrderAction } from "@/app/(admin)/dashboard/orders/actions"
 
 type UserOption = { id: string; name: string; email: string }
 
@@ -33,6 +34,7 @@ type Order = {
   total: number
   status: string
   createdAt: Date
+  deletedAt: Date | null
   user: { name: string; email: string }
   detail?: {
     name: string
@@ -50,7 +52,15 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
   failed: "destructive",
 }
 
-export function OrderList({ orders, users }: { orders: Order[]; users: UserOption[] }) {
+export function OrderList({
+  orders,
+  users,
+  tab = "active",
+}: {
+  orders: Order[]
+  users: UserOption[]
+  tab?: "active" | "trash"
+}) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [formOpen, setFormOpen] = useState(false)
@@ -59,15 +69,28 @@ export function OrderList({ orders, users }: { orders: Order[]; users: UserOptio
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <div />
-        <Button onClick={() => { setEditing(null); setFormOpen(true) }} size="sm">
-          <PlusIcon className="mr-1 size-4" />
-          New Order
-        </Button>
-      </div>
+      <Tabs
+        value={tab}
+        onValueChange={(v) => router.push(v === "trash" ? "?tab=trash" : "?")}
+      >
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="trash">Trash</TabsTrigger>
+          </TabsList>
+          {tab === "active" && (
+            <Button onClick={() => { setEditing(null); setFormOpen(true) }} size="sm">
+              <PlusIcon className="mr-1 size-4" />
+              New Order
+            </Button>
+          )}
+        </div>
+      </Tabs>
+
       {orders.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">No orders yet.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          {tab === "trash" ? "Trash is empty." : "No orders yet."}
+        </p>
       ) : (
         <Table>
           <TableHeader>
@@ -77,6 +100,7 @@ export function OrderList({ orders, users }: { orders: Order[]; users: UserOptio
               <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
+              {tab === "trash" && <TableHead>Deleted</TableHead>}
               <TableHead className="w-28">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -95,19 +119,37 @@ export function OrderList({ orders, users }: { orders: Order[]; users: UserOptio
                 <TableCell className="text-sm text-muted-foreground">
                   {new Date(o.createdAt).toLocaleDateString()}
                 </TableCell>
+                {tab === "trash" && (
+                  <TableCell className="text-sm text-muted-foreground">
+                    {o.deletedAt ? new Date(o.deletedAt).toLocaleDateString() : "—"}
+                  </TableCell>
+                )}
                 <TableCell>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="size-8" onClick={() => setViewing(o)}>
-                      <EyeIcon className="size-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="size-8" onClick={() => { setEditing(o); setFormOpen(true) }}>
-                      <PencilIcon className="size-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="size-8 text-destructive" disabled={isPending}
-                      onClick={() => startTransition(async () => { const r = await deleteOrderAction(o.id); toast.success(r?.message ?? "Deleted."); router.refresh() })}>
-                      <Trash2Icon className="size-4" />
-                    </Button>
-                  </div>
+                  {tab === "active" ? (
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="size-8" onClick={() => setViewing(o)}>
+                        <EyeIcon className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="size-8" onClick={() => { setEditing(o); setFormOpen(true) }}>
+                        <PencilIcon className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="size-8 text-destructive" disabled={isPending}
+                        onClick={() => startTransition(async () => { const r = await deleteOrderAction(o.id); toast.success(r?.message ?? "Deleted."); router.refresh() })}>
+                        <Trash2Icon className="size-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="size-8" disabled={isPending}
+                        onClick={() => startTransition(async () => { const r = await restoreOrderAction(o.id); toast.success(r?.message ?? "Restored."); router.refresh() })}>
+                        <RotateCcwIcon className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="size-8 text-destructive" disabled={isPending}
+                        onClick={() => startTransition(async () => { const r = await permanentDeleteOrderAction(o.id); toast.success(r?.message ?? "Deleted."); router.refresh() })}>
+                        <Trash2Icon className="size-4" />
+                      </Button>
+                    </div>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -115,12 +157,14 @@ export function OrderList({ orders, users }: { orders: Order[]; users: UserOptio
         </Table>
       )}
 
-      <OrderForm
-        open={formOpen}
-        onOpenChange={(o) => { setFormOpen(o); if (!o) setEditing(null) }}
-        order={editing}
-        users={users}
-      />
+      {tab === "active" && (
+        <OrderForm
+          open={formOpen}
+          onOpenChange={(o) => { setFormOpen(o); if (!o) setEditing(null) }}
+          order={editing}
+          users={users}
+        />
+      )}
 
       {/* Detail viewer */}
       <Sheet open={!!viewing} onOpenChange={() => setViewing(null)}>

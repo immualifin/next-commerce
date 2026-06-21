@@ -3,15 +3,23 @@ import prisma from "@/lib/prisma"
 import { serialize } from "@/lib/utils"
 import { ProductList } from "@/components/product-list"
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const { tab } = await searchParams
+  const isTrash = tab === "trash"
+
   const [products, brands, categories, locations] = await Promise.all([
     prisma.product.findMany({
+      where: { deletedAt: isTrash ? { not: null } : null },
       orderBy: { createdAt: "desc" },
       include: { brand: true, category: true, location: true },
     }),
-    prisma.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    prisma.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    prisma.location.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.brand.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.category.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.location.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ])
 
   return (
@@ -28,6 +36,7 @@ export default async function ProductsPage() {
             brands={serialize(brands)}
             categories={serialize(categories)}
             locations={serialize(locations)}
+            tab={isTrash ? "trash" : "active"}
           />
         </div>
       </div>

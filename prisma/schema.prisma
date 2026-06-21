@@ -38,6 +38,7 @@ model User {
   rule          RoleUser @default(customer)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
 
   sessions Session[]
   accounts Account[]
@@ -96,11 +97,12 @@ model Verification {
 // ─── Ecommerce Models ─────────────────────────────────────────
 
 model Brand {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   logo      String
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   products Product[]
 
@@ -108,10 +110,11 @@ model Brand {
 }
 
 model Category {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   products Product[]
 
@@ -119,10 +122,11 @@ model Category {
 }
 
 model Location {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   products Product[]
 
@@ -146,6 +150,7 @@ model Product {
   location  Location @relation(fields: [locationId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   orders OrderProduct[]
 
@@ -163,6 +168,7 @@ model Order {
   detail    OrderDetail?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
 
   products OrderProduct[]
 

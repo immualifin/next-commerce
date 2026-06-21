@@ -3,10 +3,18 @@ import prisma from "@/lib/prisma"
 import { serialize } from "@/lib/utils"
 import { CustomerList } from "@/components/customer-list"
 
-export default async function CustomersPage() {
+export default async function CustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const { tab } = await searchParams
+  const isTrash = tab === "trash"
+
   const customers = await prisma.user.findMany({
+    where: { deletedAt: isTrash ? { not: null } : null },
     orderBy: { createdAt: "desc" },
-    select: { id: true, name: true, email: true, rule: true, createdAt: true },
+    select: { id: true, name: true, email: true, rule: true, createdAt: true, deletedAt: true },
   })
 
   return (
@@ -18,7 +26,10 @@ export default async function CustomersPage() {
             <h1 className="text-xl font-semibold">Customers</h1>
           </div>
           <p className="mt-1 mb-6 text-sm text-muted-foreground">View and manage customer accounts.</p>
-          <CustomerList customers={serialize(customers)} />
+          <CustomerList
+            customers={serialize(customers)}
+            tab={isTrash ? "trash" : "active"}
+          />
         </div>
       </div>
     </div>

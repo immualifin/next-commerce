@@ -3,8 +3,18 @@ import prisma from "@/lib/prisma"
 import { serialize } from "@/lib/utils"
 import { CategoryList } from "@/components/category-list"
 
-export default async function CategoriesPage() {
-  const categories = await prisma.category.findMany({ orderBy: { createdAt: "desc" } })
+export default async function CategoriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const { tab } = await searchParams
+  const isTrash = tab === "trash"
+
+  const categories = await prisma.category.findMany({
+    where: { deletedAt: isTrash ? { not: null } : null },
+    orderBy: { createdAt: "desc" },
+  })
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
@@ -15,7 +25,10 @@ export default async function CategoriesPage() {
             <h1 className="text-xl font-semibold">Categories</h1>
           </div>
           <p className="mt-1 mb-6 text-sm text-muted-foreground">Manage product categories.</p>
-          <CategoryList categories={serialize(categories)} />
+          <CategoryList
+            categories={serialize(categories)}
+            tab={isTrash ? "trash" : "active"}
+          />
         </div>
       </div>
     </div>

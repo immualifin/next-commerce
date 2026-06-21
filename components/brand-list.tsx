@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { PencilIcon, Trash2Icon, PlusIcon } from "lucide-react"
+import { PencilIcon, Trash2Icon, PlusIcon, RotateCcwIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
   TableBody,
@@ -14,59 +15,50 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { BrandForm } from "@/components/brand-form"
-import { deleteBrandAction } from "@/app/(admin)/dashboard/brands/actions"
+import { deleteBrandAction, restoreBrandAction, permanentDeleteBrandAction } from "@/app/(admin)/dashboard/brands/actions"
 
 type Brand = {
   id: string
   name: string
   logo: string
+  deletedAt?: Date | null
 }
 
-export function BrandList({ brands: initialBrands }: { brands: Brand[] }) {
+export function BrandList({
+  brands,
+  tab = "active",
+}: {
+  brands: Brand[]
+  tab?: "active" | "trash"
+}) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [formOpen, setFormOpen] = useState(false)
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null)
 
-  const handleEdit = (brand: Brand) => {
-    setEditingBrand(brand)
-    setFormOpen(true)
-  }
-
-  const handleNew = () => {
-    setEditingBrand(null)
-    setFormOpen(true)
-  }
-
-  const handleDelete = (id: string) => {
-    startTransition(async () => {
-      const result = await deleteBrandAction(id)
-      if (result?.message) {
-        toast.success(result.message)
-        router.refresh()
-      } else {
-        toast.error("Failed to delete brand.")
-      }
-    })
-  }
-
-  const handleFormClose = (open: boolean) => {
-    setFormOpen(open)
-    if (!open) setEditingBrand(null)
-  }
-
   return (
     <>
-      <div className="flex items-center justify-between">
-        <div />
-        <Button onClick={handleNew} size="sm">
-          <PlusIcon className="mr-1 size-4" />
-          New Brand
-        </Button>
-      </div>
-      {initialBrands.length === 0 ? (
+      <Tabs
+        value={tab}
+        onValueChange={(v) => router.push(v === "trash" ? "?tab=trash" : "?")}
+      >
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="trash">Trash</TabsTrigger>
+          </TabsList>
+          {tab === "active" && (
+            <Button onClick={() => { setEditingBrand(null); setFormOpen(true) }} size="sm">
+              <PlusIcon className="mr-1 size-4" />
+              New Brand
+            </Button>
+          )}
+        </div>
+      </Tabs>
+
+      {brands.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          No brands yet. Create your first brand.
+          {tab === "trash" ? "Trash is empty." : "No brands yet. Create your first brand."}
         </p>
       ) : (
         <Table>
@@ -74,11 +66,12 @@ export function BrandList({ brands: initialBrands }: { brands: Brand[] }) {
             <TableRow>
               <TableHead>Logo</TableHead>
               <TableHead>Name</TableHead>
+              {tab === "trash" && <TableHead>Deleted</TableHead>}
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {initialBrands.map((brand) => (
+            {brands.map((brand) => (
               <TableRow key={brand.id}>
                 <TableCell>
                   <img
@@ -88,37 +81,43 @@ export function BrandList({ brands: initialBrands }: { brands: Brand[] }) {
                   />
                 </TableCell>
                 <TableCell className="font-medium">{brand.name}</TableCell>
+                {tab === "trash" && (
+                  <TableCell className="text-sm text-muted-foreground">
+                    {brand.deletedAt ? new Date(brand.deletedAt).toLocaleDateString() : "—"}
+                  </TableCell>
+                )}
                 <TableCell>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      onClick={() => handleEdit(brand)}
-                    >
-                      <PencilIcon className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-destructive"
-                      onClick={() => handleDelete(brand.id)}
-                      disabled={isPending}
-                    >
-                      <Trash2Icon className="size-4" />
-                    </Button>
-                  </div>
+                  {tab === "active" ? (
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="size-8" onClick={() => { setEditingBrand(brand); setFormOpen(true) }}>
+                        <PencilIcon className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="size-8 text-destructive" disabled={isPending}
+                        onClick={() => startTransition(async () => { const r = await deleteBrandAction(brand.id); toast.success(r?.message ?? "Deleted."); router.refresh() })}>
+                        <Trash2Icon className="size-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="size-8" disabled={isPending}
+                        onClick={() => startTransition(async () => { const r = await restoreBrandAction(brand.id); toast.success(r?.message ?? "Restored."); router.refresh() })}>
+                        <RotateCcwIcon className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="size-8 text-destructive" disabled={isPending}
+                        onClick={() => startTransition(async () => { const r = await permanentDeleteBrandAction(brand.id); toast.success(r?.message ?? "Deleted."); router.refresh() })}>
+                        <Trash2Icon className="size-4" />
+                      </Button>
+                    </div>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       )}
-      <BrandForm
-        open={formOpen}
-        onOpenChange={handleFormClose}
-        brand={editingBrand}
-      />
+      {tab === "active" && (
+        <BrandForm open={formOpen} onOpenChange={(open) => { setFormOpen(open); if (!open) setEditingBrand(null) }} brand={editingBrand} />
+      )}
     </>
   )
 }

@@ -102,10 +102,43 @@ export async function updateOrderAction(
 
 export async function deleteOrderAction(id: string) {
   try {
-    await prisma.order.delete({ where: { id } })
-  } catch {
+    await prisma.order.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    })
+  } catch (e) {
+    console.error("[deleteOrder]", e)
     return { message: "Failed to delete order." }
   }
   revalidatePath("/dashboard/orders")
-  return { message: "Order deleted successfully." }
+  return { message: "Order moved to trash." }
+}
+
+export async function restoreOrderAction(id: string) {
+  try {
+    await prisma.order.update({
+      where: { id },
+      data: { deletedAt: null },
+    })
+  } catch (e) {
+    console.error("[restoreOrder]", e)
+    return { message: "Failed to restore order." }
+  }
+  revalidatePath("/dashboard/orders")
+  return { message: "Order restored successfully." }
+}
+
+export async function permanentDeleteOrderAction(id: string) {
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.orderDetail.deleteMany({ where: { orderId: id } })
+      await tx.orderProduct.deleteMany({ where: { orderId: id } })
+      await tx.order.delete({ where: { id } })
+    })
+  } catch (e) {
+    console.error("[permanentDeleteOrder]", e)
+    return { message: "Failed to permanently delete order." }
+  }
+  revalidatePath("/dashboard/orders")
+  return { message: "Order permanently deleted." }
 }

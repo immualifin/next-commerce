@@ -52,6 +52,16 @@ npx prisma studio
 
 Opens Prisma Studio at [http://localhost:5555](http://localhost:5555) — a visual GUI to browse, edit, and filter all 11 tables.
 
+## Soft Delete (Trash)
+
+All entities support soft delete — records are moved to trash instead of being permanently removed. Each list page has **Active** and **Trash** tabs:
+
+- **Soft delete** (`deleteXAction`): Sets `deletedAt` — record hidden from active view, appears in trash
+- **Restore** (`restoreXAction`): Clears `deletedAt` — record returns to active view
+- **Permanent delete** (`permanentDeleteXAction`): Hard delete from database with cascade cleanup (e.g. deleting a brand also removes its products and order references)
+
+The trash view shows the deletion date for each record.
+
 ## Project Structure
 
 ```
@@ -146,7 +156,7 @@ Each entity follows the same pattern:
 ```
 Server Action (actions.ts)
   → Zod safeParse for validation
-  → Prisma mutation (create/update/delete)
+  → Prisma mutation (create/update/soft-delete/restore/permanent-delete)
   → revalidatePath("/dashboard/<entity>")
   → return { errors, message }
 
@@ -157,12 +167,15 @@ Client Form (<entity>-form.tsx)
   → Sonner toast on success
 
 Client List (<entity>-list.tsx)
-  → Table with edit/delete row actions
-  → New button opens Sheet form
-  → useTransition for async delete
+  → Active/Trash tabs (searchParams: ?tab=trash)
+  → Table with edit/soft-delete row actions (active tab)
+  → Table with restore/permanent-delete row actions (trash tab)
+  → New button opens Sheet form (active tab only)
+  → useTransition for async delete/restore
 
 Page (page.tsx)
   → Server component
-  → Fetch data via prisma.findMany()
-  → Pass to client list component
+  → Reads searchParams.tab to filter active vs trash
+  → Fetch data via prisma.findMany({ where: { deletedAt: ... } })
+  → Pass tab prop + serialized data to client list component
 ```

@@ -3,8 +3,16 @@ import prisma from "@/lib/prisma"
 import { serialize } from "@/lib/utils"
 import { BrandList } from "@/components/brand-list"
 
-export default async function BrandsPage() {
+export default async function BrandsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const { tab } = await searchParams
+  const isTrash = tab === "trash"
+
   const brands = await prisma.brand.findMany({
+    where: { deletedAt: isTrash ? { not: null } : null },
     orderBy: { createdAt: "desc" },
   })
 
@@ -19,7 +27,10 @@ export default async function BrandsPage() {
           <p className="mt-1 mb-6 text-sm text-muted-foreground">
             Manage product brands.
           </p>
-          <BrandList brands={serialize(brands)} />
+          <BrandList
+            brands={serialize(brands)}
+            tab={isTrash ? "trash" : "active"}
+          />
         </div>
       </div>
     </div>

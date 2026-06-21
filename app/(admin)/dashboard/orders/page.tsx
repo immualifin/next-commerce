@@ -3,13 +3,22 @@ import prisma from "@/lib/prisma"
 import { serialize } from "@/lib/utils"
 import { OrderList } from "@/components/order-list"
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const { tab } = await searchParams
+  const isTrash = tab === "trash"
+
   const [orders, users] = await Promise.all([
     prisma.order.findMany({
+      where: { deletedAt: isTrash ? { not: null } : null },
       orderBy: { createdAt: "desc" },
       include: { user: true, detail: true },
     }),
     prisma.user.findMany({
+      where: { deletedAt: null },
       orderBy: { name: "asc" },
       select: { id: true, name: true, email: true },
     }),
@@ -27,6 +36,7 @@ export default async function OrdersPage() {
           <OrderList
             orders={serialize(orders)}
             users={serialize(users)}
+            tab={isTrash ? "trash" : "active"}
           />
         </div>
       </div>

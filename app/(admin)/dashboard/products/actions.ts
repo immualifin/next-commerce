@@ -99,10 +99,40 @@ export async function updateProductAction(
 
 export async function deleteProductAction(id: string) {
   try {
-    await prisma.product.delete({ where: { id } })
+    await prisma.product.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    })
   } catch {
     return { message: "Failed to delete product." }
   }
   revalidatePath("/dashboard/products")
-  return { message: "Product deleted successfully." }
+  return { message: "Product moved to trash." }
+}
+
+export async function restoreProductAction(id: string) {
+  try {
+    await prisma.product.update({
+      where: { id },
+      data: { deletedAt: null },
+    })
+  } catch {
+    return { message: "Failed to restore product." }
+  }
+  revalidatePath("/dashboard/products")
+  return { message: "Product restored successfully." }
+}
+
+export async function permanentDeleteProductAction(id: string) {
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.orderProduct.deleteMany({ where: { productId: id } })
+      await tx.product.delete({ where: { id } })
+    })
+  } catch (e) {
+    console.error("[permanentDeleteProduct]", e)
+    return { message: "Failed to permanently delete product." }
+  }
+  revalidatePath("/dashboard/products")
+  return { message: "Product permanently deleted." }
 }
