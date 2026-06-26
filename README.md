@@ -4,7 +4,7 @@ Ecommerce app built with Next.js 16, Prisma, and Better Auth.
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 (Turbopack)
+- **Framework**: Next.js 16 (webpack — Turbopack `--webpack` flag for Windows compatibility)
 - **Database**: PostgreSQL (Supabase)
 - **ORM**: Prisma 6
 - **Auth**: Better Auth (email/password + Google OAuth, password: scrypt)
@@ -36,6 +36,24 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Google OAuth Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) → create a project
+2. **APIs & Services** → **OAuth consent screen** → External → fill App name & email
+3. **Credentials** → **+ Create Credentials** → **OAuth client ID** → Web application
+4. Add **Authorized redirect URI**:
+   ```
+   http://localhost:3000/api/auth/callback/google
+   ```
+5. Copy **Client ID** and **Client Secret** to `.env`:
+   ```env
+   GOOGLE_CLIENT_ID="xxxxx.apps.googleusercontent.com"
+   GOOGLE_CLIENT_SECRET="GOCSPX-xxxxx"
+   ```
+6. Restart dev server — Google sign-in button will work at `/dashboard/sign-in`
+
+> **Note:** The dev script uses `--webpack` by default. Turbopack has a known `ChunkLoadError` issue on Windows that causes infinite reload loops. Remove the `--webpack` flag in `package.json` if on macOS/Linux or once the issue is resolved.
 
 ## Default Admin
 

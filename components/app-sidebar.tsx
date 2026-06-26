@@ -16,14 +16,9 @@ import {
 } from "@/components/ui/sidebar"
 import Link from "next/link"
 import { LayoutDashboardIcon, PackageIcon, ClipboardListIcon, UsersIcon, TagIcon, LayoutGridIcon, MapPinIcon, Settings2Icon, CircleHelpIcon, CommandIcon } from "lucide-react"
+import { authClient } from "@/lib/auth-client"
 
-const data = {
-  user: {
-    name: "Admin",
-    email: "admin@example.com",
-    avatar: "/avatars/admin.jpg",
-  },
-  navMain: [
+const navMain = [
     {
       title: "Dashboard",
       url: "/dashboard",
@@ -80,8 +75,8 @@ const data = {
         />
       ),
     },
-  ],
-  navSecondary: [
+  ];
+const navSecondary = [
     {
       title: "Settings",
       url: "/dashboard/settings",
@@ -98,9 +93,14 @@ const data = {
         />
       ),
     },
-  ],
-}
+  ];
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: session } = authClient.useSession();
+  const user = {
+    name: session?.user?.name ?? "User",
+    email: session?.user?.email ?? "",
+    avatar: session?.user?.image ?? "",
+  };
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -117,11 +117,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

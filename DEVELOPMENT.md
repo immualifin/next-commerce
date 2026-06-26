@@ -211,6 +211,17 @@ npx shadcn add "@shadcn/dashboard-01"
 | Customer | Direct delete (user may have sessions/accounts — handled separately) |
 | Order | Delete OrderDetail + OrderProduct references, then delete order |
 
+### Phase 13 — Google OAuth & Fixes
+
+| Step | Detail |
+|------|--------|
+| Google Cloud Console | Buat project → OAuth consent screen → OAuth 2.0 Client ID (Web application) |
+| Redirect URI | `http://localhost:3000/api/auth/callback/google` — pakai path dari better-auth |
+| Credentials | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` di `.env` — sudah dikonfigurasi di `lib/auth.ts` |
+| Reload loop fix | Turbopack `ChunkLoadError` pada HMR client di Windows → ganti ke `--webpack` di `package.json` dev script |
+| Dynamic sidebar user | `app-sidebar.tsx` sekarang pakai `authClient.useSession()` — nama, email, dan avatar dari akun Google, bukan hardcoded `admin@example.com` |
+| NavUser | Tetap menerima prop `user` — komponen reusable, data di-fetch di parent (`app-sidebar.tsx`) |
+
 ## Tech Stack
 
 | Layer | Technology |
