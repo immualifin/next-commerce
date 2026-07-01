@@ -250,7 +250,8 @@ npx shadcn add "@shadcn/dashboard-01"
 | Sign-in form | `components/sign-in-form.tsx` — Client Component, email/password + Google OAuth, redirect ke `/` |
 | Sign-up form | `components/sign-up-form.tsx` — Client Component, name/email/password + Google OAuth, redirect ke `/` |
 | Server actions | `customerSignInAction` + `signUpAction` — Zod validation → Better Auth API → forward cookies → redirect `/` |
-| Landing page | `app/page.tsx` — Hero section dengan CTA "Get started" + "Sign in" |
+| Landing page | `app/page.tsx` — Full bwa-belanja style landing page (navbar, hero, testimonials, categories, products, brands) |
+| Dummy data | Inline static data menggunakan assets dari bwa-belanja (icons, thumbnails, logos, photos) |
 | Role | User baru otomatis `rule: customer` dari database default `@default(customer)` |
 | Separation | Admin auth (`/dashboard/sign-in`) dan customer auth (`/sign-in`) terpisah penuh — redirect, form, actions, dan layout masing-masing |
 
@@ -264,6 +265,54 @@ npx shadcn add "@shadcn/dashboard-01"
 | Sign-up link | `/dashboard/sign-up` (broken) | `/sign-up` |
 | Forgot password link | Ada (placeholder) | Ada (placeholder) |
 | Component | `login-form.tsx` | `sign-in-form.tsx` |
+
+### Phase 15 — Landing Page Redesign
+
+| Step | Detail |
+|------|--------|
+| Reference | Landing page dari project bwa-belanja (`qkp93pbb-bwa-belanja`) |
+| Assets | Copy semua assets dari bwa-belanja: icons (31), logos (7 brand + logo.svg), photos (4), banners (1), thumbnails (6) |
+| Navbar | `components/landing/landing-navbar.tsx` — Server Component, bg-[#0D5CD7] rounded-3xl, nav links + cart icon + Sign In/Sign Up |
+| Hero | Badge crown + heading "Working Faster 10x" + CTA buttons + product banner dengan floating badges (Bonus + Warranty) |
+| Testimonials | 4 testimonial cards dengan foto dari `/assets/photos/` |
+| Categories | 8 kategori dummy dengan icon unik per kategori (4-column grid) |
+| Products | 10 produk dummy menggunakan 6 thumbnails dari bwa-belanja (5-column grid, 2 section: Most Picked + New Releases) |
+| Brands | 5 brand logo dari `/assets/logos/` (5-column grid) |
+| Price format | `lib/rupiah-format.ts` — `Intl.NumberFormat("id-ID")` untuk format Rupiah |
+| Data approach | Semua data inline static di `app/page.tsx` — tanpa Prisma, tanpa async/Suspense |
+| Route type | `○ /` (Static) — halaman fully static, no dynamic rendering |
+| Reload loop fix | Root cause: `auth.api.getSession()` dengan Next.js `ReadonlyHeaders` incompatibility + client-side `useSession()` hydration mismatch. Fix: halaman static murni tanpa auth check. Navbar selalu tampil Sign In/Sign Up. |
+| Auth-aware nav | Dihapus dari landing page untuk mencegah reload loop. Customer yang sudah login bisa langsung akses `/dashboard`. |
+
+**Komponen baru:**
+```
+components/
+├── landing/
+│   ├── landing-navbar.tsx         # Server component — navbar bwa-belanja style
+│   ├── list-category.tsx          # Async server component — grid kategori (4-col)
+│   ├── list-products.tsx          # Async server component — grid produk (5-col, title prop)
+│   ├── card-product.tsx           # Server component — card produk individual
+│   └── list-brands.tsx            # Async server component — grid brand logo (5-col)
+└── user-dropdown.tsx              # Client component — user dropdown (tidak digunakan di landing)
+```
+
+**Data layer:**
+```
+app/_data/
+└── landing.ts                     # Static dummy data + type exports (CategoryItem, ProductItem, BrandItem)
+lib/
+└── rupiah-format.ts               # Currency formatter (IDR)
+```
+
+**Assets dari bwa-belanja:**
+```
+public/assets/
+├── banners/                       # 1 hero product image
+├── icons/                         # 31 SVG icons
+├── logos/                         # 7 brand + app logo SVGs
+├── photos/                        # 4 testimonial photos
+└── thumbnails/                    # 6 product thumbnails
+```
 
 ## Tech Stack
 
@@ -334,8 +383,17 @@ app/
 │       └── [...all]/
 │           └── route.ts            # Better Auth API handler
 ├── layout.tsx                      # Root layout + TooltipProvider
-└── page.tsx                        # Customer landing page (hero section)
+├── page.tsx                        # Landing page — full bwa-belanja style (navbar, hero, testimonials, categories, products, brands)
+├── _data/
+│   └── landing.ts                  # Static dummy data + types (categories, products, brands)
 components/
+├── landing/                        # Landing page components
+│   ├── landing-navbar.tsx          # Navbar bwa-belanja style
+│   ├── list-category.tsx           # Category grid (4-col)
+│   ├── list-products.tsx           # Product grid (5-col, title prop)
+│   ├── card-product.tsx            # Individual product card
+│   └── list-brands.tsx             # Brand logo grid (5-col)
+├── user-dropdown.tsx               # Public user dropdown (unused on landing — kept for future use)
 ├── app-sidebar.tsx                 # Sidebar shell + menu data (7 main items)
 ├── nav-main.tsx                    # Main nav (Link + usePathname active state)
 ├── nav-secondary.tsx               # Secondary nav (Settings, Help)
@@ -361,7 +419,8 @@ lib/
 ├── auth-client.ts                  # Better Auth client (for OAuth + signOut)
 ├── prisma.ts                       # Prisma singleton
 ├── utils.ts                        # cn(), serialize() helpers
-└── validations.ts                  # Zod schemas (auth + 6 entity schemas)
+├── validations.ts                  # Zod schemas (auth + 6 entity schemas)
+└── rupiah-format.ts                # IDR currency formatter
 prisma/
 ├── schema.prisma                   # Auth + ecommerce models (11 total)
 ├── seed.ts                         # Superadmin seeder

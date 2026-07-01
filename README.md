@@ -128,8 +128,16 @@ app/
 │           └── page.tsx
 ├── api/auth/[...all]/route.ts   # Better Auth API handler
 ├── layout.tsx                   # Root layout + TooltipProvider
-└── page.tsx                     # Customer landing page (hero section)
+├── page.tsx                     # Landing page — full bwa-belanja style
+├── _data/
+│   └── landing.ts               # Static dummy data + types
 components/
+├── landing/                     # Landing page components
+│   ├── landing-navbar.tsx       # Navbar bwa-belanja style
+│   ├── list-category.tsx        # Category grid
+│   ├── list-products.tsx        # Product grid
+│   ├── card-product.tsx         # Product card
+│   └── list-brands.tsx          # Brand logo grid
 ├── app-sidebar.tsx              # Sidebar shell + menu data
 ├── nav-main.tsx                 # Main navigation (with active state)
 ├── nav-secondary.tsx            # Secondary nav (Settings, Help)
@@ -153,7 +161,8 @@ lib/
 ├── auth-client.ts               # Better Auth client
 ├── prisma.ts                    # Prisma singleton
 ├── utils.ts                     # cn(), serialize() helpers
-└── validations.ts               # Zod schemas (auth + 6 entities)
+├── validations.ts               # Zod schemas (auth + 6 entities)
+└── rupiah-format.ts             # IDR currency formatter
 hooks/
 └── use-mobile.ts                # Mobile detection hook
 prisma/
@@ -169,7 +178,7 @@ prisma/
 
 | URL | Description |
 |-----|-------------|
-| `/` | Landing page (hero section + CTA) |
+| `/` | Landing page — full bwa-belanja style (navbar, hero, testimonials, categories, products, brands) |
 | `/sign-in` | Customer sign-in (email/password + Google OAuth) |
 | `/sign-up` | Customer sign-up (name/email/password + Google OAuth) |
 
