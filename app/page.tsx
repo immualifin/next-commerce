@@ -1,4 +1,33 @@
 import Link from "next/link"
+import { cookies } from "next/headers"
+import prisma from "@/lib/prisma"
+
+// ── Auth helper ──
+
+async function getLandingUser() {
+  try {
+    const cookieStore = await cookies()
+    const token =
+      cookieStore.get("better-auth.session_token")?.value ??
+      cookieStore.get("__Secure-better-auth.session_token")?.value
+
+    if (!token) return null
+
+    const session = await prisma.session.findUnique({
+      where: { token },
+      include: { user: true },
+    })
+
+    if (!session || session.expiresAt < new Date()) return null
+
+    return {
+      name: session.user.name ?? "User",
+      image: session.user.image ?? null,
+    }
+  } catch {
+    return null
+  }
+}
 
 // ── Dummy data ──
 
@@ -41,7 +70,9 @@ const TESTIMONIALS = [
   { img: "/assets/photos/p4.png", quote: "Big deals ever!", name: "Udin Sarifun" },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getLandingUser()
+
   return (
     <div className="min-h-svh bg-white">
       {/* ── Header ── */}
@@ -73,18 +104,41 @@ export default function HomePage() {
                 <img src="/assets/icons/cart.svg" alt="cart" className="size-12" />
               </div>
             </Link>
-            <Link
-              href="/sign-in"
-              className="rounded-full bg-white px-5 py-3 font-semibold text-[#0D5CD7] transition-all hover:bg-white/90"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/sign-up"
-              className="rounded-full bg-white px-5 py-3 font-semibold text-[#0D5CD7] transition-all hover:bg-white/90"
-            >
-              Sign Up
-            </Link>
+            {user ? (
+              <Link href="/account" className="flex items-center gap-2">
+                <span className="text-sm font-medium text-white">
+                  Hi, {user.name.split(" ")[0]}
+                </span>
+                <div className="flex size-[48px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#E5E5E5] bg-white p-1">
+                  {user.image ? (
+                    <img
+                      src={user.image}
+                      className="size-full rounded-full object-cover"
+                      alt={user.name}
+                    />
+                  ) : (
+                    <span className="text-sm font-semibold text-[#0D5CD7]">
+                      {user.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="rounded-full bg-white px-5 py-3 font-semibold text-[#0D5CD7] transition-all hover:bg-white/90"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="rounded-full bg-white px-5 py-3 font-semibold text-[#0D5CD7] transition-all hover:bg-white/90"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </nav>
 
