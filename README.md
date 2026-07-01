@@ -178,7 +178,7 @@ prisma/
 
 | URL | Description |
 |-----|-------------|
-| `/` | Landing page — full bwa-belanja style (navbar, hero, testimonials, categories, products, brands) |
+| `/` | Landing page — bwa-belanja style, auth-aware navbar ("Hi, Name" / Sign In) |
 | `/sign-in` | Customer sign-in (email/password + Google OAuth) |
 | `/sign-up` | Customer sign-up (name/email/password + Google OAuth) |
 

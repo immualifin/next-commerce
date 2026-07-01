@@ -279,10 +279,10 @@ npx shadcn add "@shadcn/dashboard-01"
 | Products | 10 produk dummy menggunakan 6 thumbnails dari bwa-belanja (5-column grid, 2 section: Most Picked + New Releases) |
 | Brands | 5 brand logo dari `/assets/logos/` (5-column grid) |
 | Price format | `lib/rupiah-format.ts` — `Intl.NumberFormat("id-ID")` untuk format Rupiah |
-| Data approach | Semua data inline static di `app/page.tsx` — tanpa Prisma, tanpa async/Suspense |
-| Route type | `○ /` (Static) — halaman fully static, no dynamic rendering |
-| Reload loop fix | Root cause: `auth.api.getSession()` dengan Next.js `ReadonlyHeaders` incompatibility + client-side `useSession()` hydration mismatch. Fix: halaman static murni tanpa auth check. Navbar selalu tampil Sign In/Sign Up. |
-| Auth-aware nav | Dihapus dari landing page untuk mencegah reload loop. Customer yang sudah login bisa langsung akses `/dashboard`. |
+| Data approach | Semua data inline static di `app/page.tsx` — tanpa async/Suspense |
+| Route type | `ƒ /` (Dynamic) — `headers()` untuk membaca session cookie |
+| Auth-aware nav | `getLandingUser()` — baca session cookie via `auth.api.getSession({ headers: new Headers({ cookie }) })`. Navbar: "Hi, Name" + avatar (logged in) atau Sign In / Sign Up (logged out) |
+| Reload loop fix | Root cause 1: `auth.api.getSession()` dengan Next.js `ReadonlyHeaders` tidak kompatibel. Fix: `new Headers({ cookie: cookieHeader })` — extract cookie header, buat Headers object baru. Root cause 2: Better Auth pakai encrypted JWT cookies (`setSignedCookie`), cookie value bukan raw DB token. Direct Prisma lookup selalu gagal. Fix: gunakan `auth.api.getSession()` yang handle decrypt internal. |
 
 **Komponen baru:**
 ```
@@ -443,7 +443,7 @@ Route groups don't affect the URL — they only organize layout inheritance.
 
 | URL | Page | Type |
 |-----|------|------|
-| `/` | Landing page (hero section) | Server |
+| `/` | Landing page — bwa-belanja style (navbar auth-aware, hero, testimonials, categories, products, brands) | Server (Dynamic) |
 | `/sign-in` | Customer sign-in (email/password + Google OAuth) | Server + Client |
 | `/sign-up` | Customer sign-up (name/email/password + Google OAuth) | Server + Client |
 | `/dashboard` | Dashboard overview (charts + cards + table) | Server + Client |
