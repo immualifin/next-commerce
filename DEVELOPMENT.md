@@ -38,6 +38,23 @@ npx prisma migrate dev
 npm run dev
 ```
 
+## Verification
+
+```bash
+# Lint — 0 errors, 2 warnings (known: next/img + TanStack table)
+npm run lint
+
+# Build — all 16 pages compiled successfully
+npm run build
+```
+
+| Check | Status |
+|-------|--------|
+| ESLint | ✅ 0 errors (2 warnings — known benign) |
+| TypeScript | ✅ Pass — no type errors |
+| Build | ✅ 16/16 pages generated |
+| App Router | `/`, `/sign-in`, `/sign-up`, `/dashboard`, `/dashboard/*` |
+
 ## Project Timeline
 
 Urutan pengerjaan project dari awal sampai sekarang.
@@ -222,6 +239,32 @@ npx shadcn add "@shadcn/dashboard-01"
 | Dynamic sidebar user | `app-sidebar.tsx` sekarang pakai `authClient.useSession()` — nama, email, dan avatar dari akun Google, bukan hardcoded `admin@example.com` |
 | NavUser | Tetap menerima prop `user` — komponen reusable, data di-fetch di parent (`app-sidebar.tsx`) |
 
+### Phase 14 — Customer Auth Pages
+
+| Step | Detail |
+|------|--------|
+| Route group | `(auth)` di root level — URL bersih `/sign-in` dan `/sign-up` |
+| Layout | `app/(auth)/layout.tsx` — centered card layout dengan branding "Next Commerce" |
+| Sign-in page | `app/(auth)/sign-in/page.tsx` — Server Component, render `<SignInForm />` |
+| Sign-up page | `app/(auth)/sign-up/page.tsx` — Server Component, render `<SignUpForm />` |
+| Sign-in form | `components/sign-in-form.tsx` — Client Component, email/password + Google OAuth, redirect ke `/` |
+| Sign-up form | `components/sign-up-form.tsx` — Client Component, name/email/password + Google OAuth, redirect ke `/` |
+| Server actions | `customerSignInAction` + `signUpAction` — Zod validation → Better Auth API → forward cookies → redirect `/` |
+| Landing page | `app/page.tsx` — Hero section dengan CTA "Get started" + "Sign in" |
+| Role | User baru otomatis `rule: customer` dari database default `@default(customer)` |
+| Separation | Admin auth (`/dashboard/sign-in`) dan customer auth (`/sign-in`) terpisah penuh — redirect, form, actions, dan layout masing-masing |
+
+**Perbedaan admin vs customer auth:**
+
+| Aspek | Admin (`/dashboard/sign-in`) | Customer (`/sign-in`) |
+|-------|------------------------------|------------------------|
+| Redirect setelah login | `/dashboard` | `/` |
+| Google OAuth callback | `/dashboard` | `/` |
+| Branding | "Acme Inc." | "Next Commerce" |
+| Sign-up link | `/dashboard/sign-up` (broken) | `/sign-up` |
+| Forgot password link | Ada (placeholder) | Ada (placeholder) |
+| Component | `login-form.tsx` | `sign-in-form.tsx` |
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -245,17 +288,25 @@ npx shadcn add "@shadcn/dashboard-01"
 
 ```
 app/
+├── (auth)/                         # Customer auth route group
+│   ├── layout.tsx                  # Centered card layout "Next Commerce"
+│   ├── sign-in/
+│   │   ├── page.tsx                # <SignInForm />
+│   │   └── actions.ts              # customerSignInAction → redirect /
+│   └── sign-up/
+│       ├── page.tsx                # <SignUpForm />
+│       └── actions.ts              # signUpAction → redirect /
 ├── (admin)/
 │   └── dashboard/
 │       ├── layout.tsx              # Shared shell: SidebarProvider + AppSidebar + SiteHeader
 │       ├── (index)/
 │       │   ├── page.tsx            # Dashboard overview (charts + data table)
 │       │   └── data.json           # Sample data for table
-│       ├── (auth)/                 # auth layout wrapper
-│       │   ├── layout.tsx          # centered + logo
+│       ├── (auth)/                 # Admin auth layout wrapper
+│       │   ├── layout.tsx          # centered + logo "Acme Inc."
 │       │   └── sign-in/
 │       │       ├── page.tsx        # <LoginForm />
-│       │       └── actions.ts      # server action
+│       │       └── actions.ts      # signInAction → redirect /dashboard
 │       ├── products/
 │       │   ├── page.tsx            # Server fetch → ProductList
 │       │   └── actions.ts          # CRUD server actions
@@ -283,7 +334,7 @@ app/
 │       └── [...all]/
 │           └── route.ts            # Better Auth API handler
 ├── layout.tsx                      # Root layout + TooltipProvider
-└── page.tsx
+└── page.tsx                        # Customer landing page (hero section)
 components/
 ├── app-sidebar.tsx                 # Sidebar shell + menu data (7 main items)
 ├── nav-main.tsx                    # Main nav (Link + usePathname active state)
@@ -293,7 +344,9 @@ components/
 ├── section-cards.tsx               # Dashboard 4 metric cards
 ├── chart-area-interactive.tsx      # Dashboard interactive chart
 ├── data-table.tsx                  # Dashboard sortable data table
-├── login-form.tsx                  # Sign-in form (useActionState)
+├── login-form.tsx                  # Admin sign-in form (useActionState)
+├── sign-in-form.tsx                # Customer sign-in form (useActionState)
+├── sign-up-form.tsx                # Customer sign-up form (useActionState)
 ├── brand-form.tsx / brand-list.tsx
 ├── category-form.tsx / category-list.tsx
 ├── location-form.tsx / location-list.tsx
@@ -322,7 +375,8 @@ prisma/
 |-------|------|-----|
 | `(admin)` | Admin pages | `/dashboard` |
 | `(index)` | Dashboard index | `/dashboard` |
-| `(auth)` | Auth pages | `/dashboard/sign-in` |
+| `(auth)` (admin) | Admin auth pages | `/dashboard/sign-in` |
+| `(auth)` (customer) | Customer auth pages | `/sign-in`, `/sign-up` |
 
 Route groups don't affect the URL — they only organize layout inheritance.
 
@@ -330,8 +384,11 @@ Route groups don't affect the URL — they only organize layout inheritance.
 
 | URL | Page | Type |
 |-----|------|------|
+| `/` | Landing page (hero section) | Server |
+| `/sign-in` | Customer sign-in (email/password + Google OAuth) | Server + Client |
+| `/sign-up` | Customer sign-up (name/email/password + Google OAuth) | Server + Client |
 | `/dashboard` | Dashboard overview (charts + cards + table) | Server + Client |
-| `/dashboard/sign-in` | Sign in (email/password + Google OAuth) | Server + Client |
+| `/dashboard/sign-in` | Admin sign-in (email/password + Google OAuth) | Server + Client |
 | `/dashboard/products` | Product catalog CRUD | Server + Client |
 | `/dashboard/orders` | Order management + shipping detail viewer | Server + Client |
 | `/dashboard/customers` | User management (edit/delete only) | Server + Client |

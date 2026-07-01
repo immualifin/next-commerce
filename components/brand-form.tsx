@@ -13,7 +13,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import type { BrandState } from "@/app/(admin)/dashboard/brands/actions"
 import { createBrandAction, updateBrandAction } from "@/app/(admin)/dashboard/brands/actions"
 
 type Brand = {

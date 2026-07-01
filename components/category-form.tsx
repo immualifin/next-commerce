@@ -13,7 +13,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import type { CategoryState } from "@/app/(admin)/dashboard/categories/actions"
 import { createCategoryAction, updateCategoryAction } from "@/app/(admin)/dashboard/categories/actions"
 
 type Category = { id: string; name: string }

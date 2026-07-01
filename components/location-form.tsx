@@ -13,7 +13,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import type { LocationState } from "@/app/(admin)/dashboard/locations/actions"
 import { createLocationAction, updateLocationAction } from "@/app/(admin)/dashboard/locations/actions"
 
 type Location = { id: string; name: string }
