@@ -1,24 +1,20 @@
 import Link from "next/link"
-import { cookies } from "next/headers"
-import prisma from "@/lib/prisma"
+import { headers } from "next/headers"
+import { auth } from "@/lib/auth"
 
 // ── Auth helper ──
 
 async function getLandingUser() {
   try {
-    const cookieStore = await cookies()
-    const token =
-      cookieStore.get("better-auth.session_token")?.value ??
-      cookieStore.get("__Secure-better-auth.session_token")?.value
+    const h = await headers()
+    const cookieHeader = h.get("cookie")
+    if (!cookieHeader) return null
 
-    if (!token) return null
-
-    const session = await prisma.session.findUnique({
-      where: { token },
-      include: { user: true },
+    const session = await auth.api.getSession({
+      headers: new Headers({ cookie: cookieHeader }),
     })
 
-    if (!session || session.expiresAt < new Date()) return null
+    if (!session?.user) return null
 
     return {
       name: session.user.name ?? "User",
