@@ -1,6 +1,9 @@
 import Link from "next/link"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
+import ListCategory from "@/components/landing/list-category"
+import ListProducts from "@/components/landing/list-products"
+import ListBrands from "@/components/landing/list-brands"
 
 // ── Auth helper ──
 
@@ -25,39 +28,7 @@ async function getLandingUser() {
   }
 }
 
-// ── Dummy data ──
-
-const CATEGORIES = [
-  { id: "cat-0", name: "Electronics", icon: "mobile.svg", count: 12 },
-  { id: "cat-1", name: "Accessories", icon: "watch.svg", count: 8 },
-  { id: "cat-2", name: "Gaming", icon: "game.svg", count: 15 },
-  { id: "cat-3", name: "Home & Living", icon: "lamp.svg", count: 5 },
-  { id: "cat-4", name: "Food & Beverage", icon: "cake.svg", count: 10 },
-  { id: "cat-5", name: "Computers", icon: "monitor.svg", count: 7 },
-  { id: "cat-6", name: "Audio", icon: "airpods.svg", count: 4 },
-  { id: "cat-7", name: "Wearables", icon: "tag.svg", count: 6 },
-]
-
-const PRODUCTS = [
-  { id: "p-1", name: "iMac 24\" M3 2024", price: "Rp 22.999.000", image_url: "/assets/thumbnails/imac24-digitalmat-gallery-1-202310-Photoroom 1.png", category_name: "Computers" },
-  { id: "p-2", name: "iPhone 15 Pro Max", price: "Rp 16.999.000", image_url: "/assets/thumbnails/iphone15pro-digitalmat-gallery-3-202309-Photoroom 1.png", category_name: "Electronics" },
-  { id: "p-3", name: "AirPods Max Sky Blue", price: "Rp 8.499.000", image_url: "/assets/thumbnails/airpods-max-select-skyblue-202011-Photoroom 1.png", category_name: "Audio" },
-  { id: "p-4", name: "MacBook Pro 16\" M3", price: "Rp 36.999.000", image_url: "/assets/thumbnails/246c3a1bf608fed816e2e038784fa995.png", category_name: "Computers" },
-  { id: "p-5", name: "iPad Air 11\" M2", price: "Rp 11.499.000", image_url: "/assets/thumbnails/ea49dfcfcaa4513d799050c989d2f177.png", category_name: "Electronics" },
-  { id: "p-6", name: "Apple Watch Ultra 2", price: "Rp 12.999.000", image_url: "/assets/thumbnails/color_back_green__buxxfjccqjzm_large_2x-Photoroom 1.png", category_name: "Wearables" },
-  { id: "p-7", name: "Samsung Galaxy S24 Ultra", price: "Rp 18.999.000", image_url: "/assets/thumbnails/iphone15pro-digitalmat-gallery-3-202309-Photoroom 1.png", category_name: "Electronics" },
-  { id: "p-8", name: "PlayStation 5 Digital", price: "Rp 7.299.000", image_url: "/assets/thumbnails/ea49dfcfcaa4513d799050c989d2f177.png", category_name: "Gaming" },
-  { id: "p-9", name: "Nintendo Switch OLED", price: "Rp 4.999.000", image_url: "/assets/thumbnails/color_back_green__buxxfjccqjzm_large_2x-Photoroom 1.png", category_name: "Gaming" },
-  { id: "p-10", name: "Sony WH-1000XM5", price: "Rp 4.799.000", image_url: "/assets/thumbnails/airpods-max-select-skyblue-202011-Photoroom 1.png", category_name: "Audio" },
-]
-
-const BRANDS = [
-  { id: "b-1", name: "Apple", logo_url: "/assets/logos/apple.svg" },
-  { id: "b-2", name: "Samsung", logo_url: "/assets/logos/samsung.svg" },
-  { id: "b-3", name: "Microsoft", logo_url: "/assets/logos/microsoft.svg" },
-  { id: "b-4", name: "Huawei", logo_url: "/assets/logos/huawei.svg" },
-  { id: "b-5", name: "Nokia", logo_url: "/assets/logos/nokia.svg" },
-]
+// ── Static data ──
 
 const TESTIMONIALS = [
   { img: "/assets/photos/p1.png", quote: "Awesome product!", name: "Jemmie Pemilia" },
@@ -216,131 +187,22 @@ export default async function HomePage() {
 
       {/* ── Content ── */}
       <section className="container mx-auto flex max-w-[1130px] flex-col gap-[50px] pb-[100px] pt-[50px]">
-        {/* Categories */}
-        <div id="categories" className="flex flex-col gap-[30px]">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold leading-[34px] text-gray-900">
-              Browse Products <br /> by Categories
-            </h2>
-            <Link
-              href="/products"
-              className="rounded-full border border-[#E5E5E5] px-6 py-3 font-semibold text-gray-700 transition-all hover:border-[#0D5CD7] hover:text-[#0D5CD7]"
-            >
-              Explore All
-            </Link>
-          </div>
-          <div className="grid grid-cols-4 gap-[30px]">
-            {CATEGORIES.map((c) => (
-              <Link
-                key={c.id}
-                href={`/products?category=${c.id}`}
-                className="categories-card"
-              >
-                <div className="flex w-full items-center gap-[14px] rounded-[20px] bg-white p-5 ring-1 ring-[#E5E5E5] transition-all duration-300 hover:ring-2 hover:ring-[#FFC736]">
-                  <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#0D5CD7]">
-                    <img src={`/assets/icons/${c.icon}`} alt={c.name} className="size-6" />
-                  </div>
-                  <div className="flex flex-col gap-[2px]">
-                    <p className="font-semibold leading-[22px] text-gray-900">{c.name}</p>
-                    <p className="text-sm text-[#616369]">{c.count} products</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Most Picked Products */}
-        <div className="flex flex-col gap-[30px]">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold leading-[34px] text-gray-900">
+        <ListCategory />
+        <ListProducts
+          title={
+            <>
               Most Picked <br /> Quality Products
-            </h2>
-            <Link
-              href="/products"
-              className="rounded-full border border-[#E5E5E5] px-6 py-3 font-semibold text-gray-700 transition-all hover:border-[#0D5CD7] hover:text-[#0D5CD7]"
-            >
-              Explore All
-            </Link>
-          </div>
-          <div className="grid grid-cols-5 gap-[30px]">
-            {PRODUCTS.map((p) => (
-              <Link key={p.id} href={`/products/${p.id}`} className="product-card">
-                <div className="flex w-full flex-col gap-[24px] rounded-[20px] bg-white p-5 ring-1 ring-[#E5E5E5] transition-all duration-300 hover:ring-2 hover:ring-[#FFC736]">
-                  <div className="flex h-[90px] w-full shrink-0 items-center justify-center overflow-hidden">
-                    <img className="h-full object-contain" src={p.image_url} alt={p.name} />
-                  </div>
-                  <div className="flex flex-col gap-[10px]">
-                    <div className="flex flex-col gap-1">
-                      <p className="font-semibold leading-[22px] text-gray-900">{p.name}</p>
-                      <p className="text-sm text-[#616369]">{p.category_name}</p>
-                    </div>
-                    <p className="font-semibold leading-[22px] text-[#0D5CD7]">{p.price}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Brands */}
-        <div id="brands" className="flex flex-col gap-[30px]">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold leading-[34px] text-gray-900">
-              Explore Our <br /> Popular Brands
-            </h2>
-            <Link
-              href="/brands"
-              className="rounded-full border border-[#E5E5E5] px-6 py-3 font-semibold text-gray-700 transition-all hover:border-[#0D5CD7] hover:text-[#0D5CD7]"
-            >
-              Explore All
-            </Link>
-          </div>
-          <div className="grid grid-cols-5 gap-[30px]">
-            {BRANDS.map((b) => (
-              <Link key={b.id} href={`/products?brand=${b.id}`} className="logo-card">
-                <div className="flex w-full items-center justify-center rounded-[20px] bg-white p-[30px_20px] ring-1 ring-[#E5E5E5] transition-all duration-300 hover:ring-2 hover:ring-[#FFC736]">
-                  <div className="flex h-[30px] w-full shrink-0 items-center justify-center overflow-hidden">
-                    <img src={b.logo_url} className="h-full w-full object-contain" alt={b.name} />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* New Releases */}
-        <div className="flex flex-col gap-[30px]">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold leading-[34px] text-gray-900">
+            </>
+          }
+        />
+        <ListBrands />
+        <ListProducts
+          title={
+            <>
               New Releases <br /> From Official Stores
-            </h2>
-            <Link
-              href="/products"
-              className="rounded-full border border-[#E5E5E5] px-6 py-3 font-semibold text-gray-700 transition-all hover:border-[#0D5CD7] hover:text-[#0D5CD7]"
-            >
-              Explore All
-            </Link>
-          </div>
-          <div className="grid grid-cols-5 gap-[30px]">
-            {PRODUCTS.map((p) => (
-              <Link key={`new-${p.id}`} href={`/products/${p.id}`} className="product-card">
-                <div className="flex w-full flex-col gap-[24px] rounded-[20px] bg-white p-5 ring-1 ring-[#E5E5E5] transition-all duration-300 hover:ring-2 hover:ring-[#FFC736]">
-                  <div className="flex h-[90px] w-full shrink-0 items-center justify-center overflow-hidden">
-                    <img className="h-full object-contain" src={p.image_url} alt={p.name} />
-                  </div>
-                  <div className="flex flex-col gap-[10px]">
-                    <div className="flex flex-col gap-1">
-                      <p className="font-semibold leading-[22px] text-gray-900">{p.name}</p>
-                      <p className="text-sm text-[#616369]">{p.category_name}</p>
-                    </div>
-                    <p className="font-semibold leading-[22px] text-[#0D5CD7]">{p.price}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
+            </>
+          }
+        />
       </section>
 
       {/* ── Footer ── */}

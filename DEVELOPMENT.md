@@ -52,8 +52,8 @@ npm run build
 |-------|--------|
 | ESLint | ✅ 0 errors (2 warnings — known benign) |
 | TypeScript | ✅ Pass — no type errors |
-| Build | ✅ 16/16 pages generated |
-| App Router | `/`, `/sign-in`, `/sign-up`, `/dashboard`, `/dashboard/*` |
+| Build | ✅ 18/18 pages generated |
+| App Router | `/`, `/sign-in`, `/sign-up`, `/categories`, `/products`, `/products/[id]`, `/dashboard`, `/dashboard/*` |
 
 ## Project Timeline
 
@@ -314,6 +314,50 @@ public/assets/
 └── thumbnails/                    # 6 product thumbnails
 ```
 
+### Phase 16 — Customer-Facing Pages & Database Integration
+
+| Step | Detail |
+|------|--------|
+| Seed expansion | Tambah 1 location, 5 brands, 8 categories, 10 produk — `prisma/seed.ts` sekarang seed full business data |
+| `prisma.seed` config | Tambah `"prisma": { "seed": "tsx prisma/seed.ts" }` di `package.json` — `npx prisma db seed` langsung jalan |
+| Icon utility | `lib/category-icons.ts` — mapping nama kategori → SVG icon (Category model tidak punya field icon) |
+| Data layer | `app/_data/landing.ts` — ganti dummy arrays dengan Prisma query (`getCategories`, `getProducts`, `getBrands`) |
+| Landing page refactor | `app/page.tsx` — ganti inline hardcoded arrays dengan komponen `<ListCategory />`, `<ListProducts />`, `<ListBrands />` (352→215 lines) |
+| Category page | `app/categories/page.tsx` — `/categories` — grid kategori dari DB + product count + auth-aware navbar + empty state |
+| Product listing | `app/products/page.tsx` — `/products` — grid produk dengan filter `?category=<id>` & `?brand=<id>`, filter chips (dismissible), empty state |
+| Product detail | `app/products/[id]/page.tsx` — `/products/[id]` — full detail (image, price rupiah, deskripsi, stock badge, brand logo+link, category link, location) + `notFound()` |
+| Seed idempotency | Semua seed pakai `findFirst` + conditional `create` — bisa dijalankan berkali-kali tanpa duplikasi |
+
+**Customer-facing routes baru:**
+
+| URL | Description |
+|-----|-------------|
+| `/categories` | Grid kategori dari database (8 kategori + product count + icon) |
+| `/products` | Product listing — filter by `?category=<id>` & `?brand=<id>`, grid 5-col |
+| `/products/[id]` | Product detail — image, price (IDR), description, stock, brand, category, location |
+
+**Seed data seeded:**
+
+| Entity | Count | Idempotency key |
+|--------|-------|-----------------|
+| Location | 1 (Jakarta Pusat) | `name` |
+| Brand | 5 (Apple, Samsung, Microsoft, Huawei, Nokia) | `name` |
+| Category | 8 (Electronics, Accessories, Gaming, Home & Living, Food & Beverage, Computers, Audio, Wearables) | `name` |
+| Product | 10 (iMac, iPhone, AirPods Max, MacBook Pro, iPad Air, Apple Watch, Galaxy S24, PS5, Switch OLED, Sony WH-1000XM5) | `name` |
+
+**New files:**
+```
+lib/
+└── category-icons.ts               # Category name → icon filename mapping
+app/
+├── categories/
+│   └── page.tsx                     # Customer-facing category page (/categories)
+└── products/
+    ├── page.tsx                     # Product listing with filters (/products)
+    └── [id]/
+        └── page.tsx                 # Product detail (/products/[id])
+```
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -383,9 +427,15 @@ app/
 │       └── [...all]/
 │           └── route.ts            # Better Auth API handler
 ├── layout.tsx                      # Root layout + TooltipProvider
-├── page.tsx                        # Landing page — full bwa-belanja style (navbar, hero, testimonials, categories, products, brands)
+├── page.tsx                        # Landing page — DB-driven via landing components (auth-aware navbar, hero, testimonials, categories, products, brands)
+├── categories/
+│   └── page.tsx                    # Customer-facing category page — DB query + icon mapping
+├── products/
+│   ├── page.tsx                    # Product listing — filterable by category/brand + CardProduct grid
+│   └── [id]/
+│       └── page.tsx                # Product detail — image, price, description, stock, brand, category, location
 ├── _data/
-│   └── landing.ts                  # Static dummy data + types (categories, products, brands)
+│   └── landing.ts                  # Prisma-backed data functions (categories, products, brands)
 components/
 ├── landing/                        # Landing page components
 │   ├── landing-navbar.tsx          # Navbar bwa-belanja style
@@ -420,7 +470,8 @@ lib/
 ├── prisma.ts                       # Prisma singleton
 ├── utils.ts                        # cn(), serialize() helpers
 ├── validations.ts                  # Zod schemas (auth + 6 entity schemas)
-└── rupiah-format.ts                # IDR currency formatter
+├── rupiah-format.ts               # IDR currency formatter
+└── category-icons.ts              # Category name → SVG icon mapping
 prisma/
 ├── schema.prisma                   # Auth + ecommerce models (11 total)
 ├── seed.ts                         # Superadmin seeder
@@ -443,9 +494,12 @@ Route groups don't affect the URL — they only organize layout inheritance.
 
 | URL | Page | Type |
 |-----|------|------|
-| `/` | Landing page — bwa-belanja style (navbar auth-aware, hero, testimonials, categories, products, brands) | Server (Dynamic) |
+| `/` | Landing page — bwa-belanja style (navbar auth-aware, hero, testimonials, categories, products, brands) — DB-driven via landing components | Server (Dynamic) |
 | `/sign-in` | Customer sign-in (email/password + Google OAuth) | Server + Client |
 | `/sign-up` | Customer sign-up (name/email/password + Google OAuth) | Server + Client |
+| `/categories` | Category listing — grid 8 kategori dari DB + product count + icon | Server (Dynamic) |
+| `/products` | Product listing — grid 5-col, filter by `?category=<id>` & `?brand=<id>`, filter chips | Server (Dynamic) |
+| `/products/[id]` | Product detail — image, price (IDR), description, stock badge, brand, category, location | Server (Dynamic) |
 | `/dashboard` | Dashboard overview (charts + cards + table) | Server + Client |
 | `/dashboard/sign-in` | Admin sign-in (email/password + Google OAuth) | Server + Client |
 | `/dashboard/products` | Product catalog CRUD | Server + Client |
@@ -498,21 +552,25 @@ npx prisma generate           # regenerate client
 npx prisma studio             # GUI browser
 ```
 
-### Seed (Superadmin)
+### Seed (Superadmin + Business Data)
 
 ```bash
 npx tsx prisma/seed.ts
+# atau
+npx prisma db seed
 ```
 
-Default credentials:
+Creates:
 
-| Field | Value |
-|-------|-------|
-| Email | `admin@example.com` |
-| Password | `admin123456` |
-| Role | `superadmin` |
+| Entity | Count | Details |
+|--------|-------|---------|
+| Superadmin | 1 | `admin@example.com` / `admin123456` |
+| Location | 1 | Jakarta Pusat |
+| Brand | 5 | Apple, Samsung, Microsoft, Huawei, Nokia (dengan logo) |
+| Category | 8 | Electronics, Accessories, Gaming, Home & Living, Food & Beverage, Computers, Audio, Wearables |
+| Product | 10 | iMac, iPhone, AirPods Max, MacBook Pro, iPad Air, Apple Watch, Galaxy S24, PS5, Switch OLED, Sony WH-1000XM5 |
 
-Seed menggunakan `hashPassword` dari `better-auth/crypto` (scrypt) + Prisma langsung insert ke `User` dan `Account`.
+Seed idempotent — aman dijalankan berkali-kali tanpa duplikasi (pakai `findFirst` + conditional `create`).
 
 ## Auth
 

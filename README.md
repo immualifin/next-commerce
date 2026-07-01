@@ -28,7 +28,7 @@ cp .env.example .env
 # Run database migration
 npx prisma migrate dev
 
-# (Optional) Seed superadmin
+# (Optional) Seed database — creates superadmin + business data (categories, brands, products)
 npx tsx prisma/seed.ts
 
 # Start dev server
@@ -128,9 +128,15 @@ app/
 │           └── page.tsx
 ├── api/auth/[...all]/route.ts   # Better Auth API handler
 ├── layout.tsx                   # Root layout + TooltipProvider
-├── page.tsx                     # Landing page — full bwa-belanja style
+├── page.tsx                     # Landing page — DB-driven via landing components
+├── categories/
+│   └── page.tsx                 # Customer-facing category page (/categories)
+├── products/
+│   ├── page.tsx                 # Product listing with filters (/products)
+│   └── [id]/
+│       └── page.tsx             # Product detail (/products/[id])
 ├── _data/
-│   └── landing.ts               # Static dummy data + types
+│   └── landing.ts               # Prisma-backed data functions (categories, products, brands)
 components/
 ├── landing/                     # Landing page components
 │   ├── landing-navbar.tsx       # Navbar bwa-belanja style
@@ -162,7 +168,8 @@ lib/
 ├── prisma.ts                    # Prisma singleton
 ├── utils.ts                     # cn(), serialize() helpers
 ├── validations.ts               # Zod schemas (auth + 6 entities)
-└── rupiah-format.ts             # IDR currency formatter
+├── rupiah-format.ts             # IDR currency formatter
+└── category-icons.ts            # Category name → SVG icon mapping
 hooks/
 └── use-mobile.ts                # Mobile detection hook
 prisma/
@@ -178,9 +185,12 @@ prisma/
 
 | URL | Description |
 |-----|-------------|
-| `/` | Landing page — bwa-belanja style, auth-aware navbar ("Hi, Name" / Sign In) |
+| `/` | Landing page — bwa-belanja style, auth-aware navbar ("Hi, Name" / Sign In), DB-driven |
 | `/sign-in` | Customer sign-in (email/password + Google OAuth) |
 | `/sign-up` | Customer sign-up (name/email/password + Google OAuth) |
+| `/categories` | Category listing — 8 categories from DB with product counts and icons |
+| `/products` | Product listing — filterable by `?category=<id>` & `?brand=<id>`, 5-column grid |
+| `/products/[id]` | Product detail — image, price (IDR), description, stock, brand, category, location |
 
 ### Admin Dashboard
 
@@ -247,7 +257,7 @@ Two separate auth flows with isolated components, actions, and redirect targets:
 # Lint — 0 errors
 npm run lint
 
-# Build — 16/16 pages
+# Build — 18/18 pages
 npm run build
 ```
 
