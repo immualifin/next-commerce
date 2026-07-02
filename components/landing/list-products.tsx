@@ -14,7 +14,7 @@ export default async function ListProducts({
   const products = await getProducts()
 
   return (
-    <div id="picked" className="flex flex-col gap-[30px]">
+    <div className="flex flex-col gap-[30px]">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold leading-[34px] text-gray-900">
           {title}

@@ -11,7 +11,7 @@ export default async function ListCategory() {
           Browse Products <br /> by Categories
         </h2>
         <Link
-          href="/products"
+          href="/categories"
           className="rounded-full border border-[#E5E5E5] px-6 py-3 font-semibold text-gray-700 transition-all hover:border-[#0D5CD7] hover:text-[#0D5CD7]"
         >
           Explore All

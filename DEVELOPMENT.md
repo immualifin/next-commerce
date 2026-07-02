@@ -52,8 +52,8 @@ npm run build
 |-------|--------|
 | ESLint | ✅ 0 errors (2 warnings — known benign) |
 | TypeScript | ✅ Pass — no type errors |
-| Build | ✅ 18/18 pages generated |
-| App Router | `/`, `/sign-in`, `/sign-up`, `/categories`, `/products`, `/products/[id]`, `/dashboard`, `/dashboard/*` |
+| Build | ✅ 19/19 pages generated |
+| App Router | `/`, `/sign-in`, `/sign-up`, `/categories`, `/products`, `/products/[id]`, `/brands`, `/dashboard`, `/dashboard/*` |
 
 ## Project Timeline
 
@@ -314,6 +314,24 @@ public/assets/
 └── thumbnails/                    # 6 product thumbnails
 ```
 
+### Phase 17 — Navbar Refactor & Brands Page
+
+| Step | Detail |
+|------|--------|
+| Navbar refactor | `landing-navbar.tsx` — dari Server Component ke Client Component (`"use client"`), terima `user` prop, `usePathname()` untuk active state, data-driven `NAV_LINKS` array (Shop, Categories, Brands, Products) |
+| Deduplication | 3 halaman (`page.tsx`, `categories/page.tsx`, `products/page.tsx`) — ganti ~70 baris inline navbar masing-masing dengan `<LandingNavbar user={user} />` |
+| Hash navigation | Nav links pakai hash anchor (`/#categories`, `/#products`, `/#brands`) — hash links tidak pernah marked active |
+| Section anchors | `app/page.tsx` — bungkus sections dengan `id` anchors (`id="categories"`, `id="products"`, `id="brands"`) untuk scroll-to-section |
+| Brands page | `app/brands/page.tsx` — `/brands` — grid brand dari DB (5-col), logo + nama + product count, auth-aware navbar, empty state, footer |
+| Fix | `list-category.tsx` — "Explore All" link dari `/products` → `/categories` |
+| Fix | `list-products.tsx` — hapus hardcoded `id="picked"` dari div |
+
+**New files:**
+```
+app/brands/
+└── page.tsx                          # Customer-facing brand page (/brands) — grid + product count
+```
+
 ### Phase 16 — Customer-Facing Pages & Database Integration
 
 | Step | Detail |
@@ -335,6 +353,7 @@ public/assets/
 | `/categories` | Grid kategori dari database (8 kategori + product count + icon) |
 | `/products` | Product listing — filter by `?category=<id>` & `?brand=<id>`, grid 5-col |
 | `/products/[id]` | Product detail — image, price (IDR), description, stock, brand, category, location |
+| `/brands` | Brand listing — grid 5 brand from DB with product count + logo |
 
 **Seed data seeded:**
 
@@ -434,11 +453,13 @@ app/
 │   ├── page.tsx                    # Product listing — filterable by category/brand + CardProduct grid
 │   └── [id]/
 │       └── page.tsx                # Product detail — image, price, description, stock, brand, category, location
+├── brands/
+│   └── page.tsx                    # Customer-facing brand page — DB query + product count
 ├── _data/
 │   └── landing.ts                  # Prisma-backed data functions (categories, products, brands)
 components/
 ├── landing/                        # Landing page components
-│   ├── landing-navbar.tsx          # Navbar bwa-belanja style
+│   ├── landing-navbar.tsx          # Client Component — shared navbar (auth-aware, active link, scroll anchors)
 │   ├── list-category.tsx           # Category grid (4-col)
 │   ├── list-products.tsx           # Product grid (5-col, title prop)
 │   ├── card-product.tsx            # Individual product card
@@ -500,6 +521,7 @@ Route groups don't affect the URL — they only organize layout inheritance.
 | `/categories` | Category listing — grid 8 kategori dari DB + product count + icon | Server (Dynamic) |
 | `/products` | Product listing — grid 5-col, filter by `?category=<id>` & `?brand=<id>`, filter chips | Server (Dynamic) |
 | `/products/[id]` | Product detail — image, price (IDR), description, stock badge, brand, category, location | Server (Dynamic) |
+| `/brands` | Brand listing — grid 5-col dari DB + product count + logo | Server (Dynamic) |
 | `/dashboard` | Dashboard overview (charts + cards + table) | Server + Client |
 | `/dashboard/sign-in` | Admin sign-in (email/password + Google OAuth) | Server + Client |
 | `/dashboard/products` | Product catalog CRUD | Server + Client |

@@ -2,7 +2,6 @@ import Link from "next/link"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
-import { getCategoryIcon } from "@/lib/category-icons"
 import { LandingNavbar } from "@/components/landing/landing-navbar"
 
 // ── Auth helper ──
@@ -30,10 +29,10 @@ async function getCurrentUser() {
 
 // ── Page ──
 
-export default async function CategoriesPage() {
+export default async function BrandsPage() {
   const user = await getCurrentUser()
 
-  const categories = await prisma.category.findMany({
+  const brands = await prisma.brand.findMany({
     where: { deletedAt: null },
     include: { _count: { select: { products: true } } },
     orderBy: { name: "asc" },
@@ -48,17 +47,17 @@ export default async function CategoriesPage() {
         {/* Page Title */}
         <div className="container mx-auto mt-[50px] max-w-[1130px]">
           <h1 className="text-[42px] font-bold leading-[48px] text-gray-900">
-            All Categories
+            All Brands
           </h1>
           <p className="mt-3 text-lg text-[#6A7789]">
-            Browse products by category — find exactly what you need.
+            Browse products by brand — explore our trusted partners.
           </p>
         </div>
       </header>
 
-      {/* ── Category Grid ── */}
+      {/* ── Brand Grid ── */}
       <section className="container mx-auto max-w-[1130px] pb-[100px] pt-[50px]">
-        {categories.length === 0 ? (
+        {brands.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EFF3FA]">
               <img
@@ -68,43 +67,40 @@ export default async function CategoriesPage() {
               />
             </div>
             <h2 className="mt-6 text-xl font-semibold text-gray-900">
-              No categories yet
+              No brands yet
             </h2>
             <p className="mt-2 text-sm text-[#6A7789]">
-              Categories will appear here once they are added.
+              Brands will appear here once they are added.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-[30px]">
-            {categories.map((c) => {
-              const icon = getCategoryIcon(c.name)
-              return (
-                <Link
-                  key={c.id}
-                  href={`/products?category=${c.id}`}
-                  className="categories-card"
-                >
-                  <div className="flex w-full items-center gap-[14px] rounded-[20px] bg-white p-5 ring-1 ring-[#E5E5E5] transition-all duration-300 hover:ring-2 hover:ring-[#FFC736]">
-                    <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#0D5CD7]">
-                      <img
-                        src={`/assets/icons/${icon}`}
-                        alt={c.name}
-                        className="size-6"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-[2px]">
-                      <p className="font-semibold leading-[22px] text-gray-900">
-                        {c.name}
-                      </p>
-                      <p className="text-sm text-[#616369]">
-                        {c._count.products}{" "}
-                        {c._count.products === 1 ? "product" : "products"}
-                      </p>
-                    </div>
+          <div className="grid grid-cols-5 gap-[30px]">
+            {brands.map((b) => (
+              <Link
+                key={b.id}
+                href={`/products?brand=${b.id}`}
+                className="brands-card"
+              >
+                <div className="flex w-full flex-col items-center gap-3 rounded-[20px] bg-white p-[30px_20px] ring-1 ring-[#E5E5E5] transition-all duration-300 hover:ring-2 hover:ring-[#FFC736]">
+                  <div className="flex h-[40px] w-full shrink-0 items-center justify-center overflow-hidden">
+                    <img
+                      src={b.logo}
+                      alt={b.name}
+                      className="h-full w-full object-contain"
+                    />
                   </div>
-                </Link>
-              )
-            })}
+                  <div className="flex flex-col items-center gap-[2px]">
+                    <p className="text-center font-semibold leading-[22px] text-gray-900">
+                      {b.name}
+                    </p>
+                    <p className="text-sm text-[#616369]">
+                      {b._count.products}{" "}
+                      {b._count.products === 1 ? "product" : "products"}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
         )}
       </section>

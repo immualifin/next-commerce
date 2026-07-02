@@ -135,11 +135,13 @@ app/
 │   ├── page.tsx                 # Product listing with filters (/products)
 │   └── [id]/
 │       └── page.tsx             # Product detail (/products/[id])
+├── brands/
+│   └── page.tsx                 # Brand listing (/brands)
 ├── _data/
 │   └── landing.ts               # Prisma-backed data functions (categories, products, brands)
 components/
 ├── landing/                     # Landing page components
-│   ├── landing-navbar.tsx       # Navbar bwa-belanja style
+│   ├── landing-navbar.tsx       # Client Component — shared navbar (auth-aware, active link, scroll anchors)
 │   ├── list-category.tsx        # Category grid
 │   ├── list-products.tsx        # Product grid
 │   ├── card-product.tsx         # Product card
@@ -191,6 +193,7 @@ prisma/
 | `/categories` | Category listing — 8 categories from DB with product counts and icons |
 | `/products` | Product listing — filterable by `?category=<id>` & `?brand=<id>`, 5-column grid |
 | `/products/[id]` | Product detail — image, price (IDR), description, stock, brand, category, location |
+| `/brands` | Brand listing — 5 brands from DB with product counts and logos |
 
 ### Admin Dashboard
 
@@ -257,7 +260,7 @@ Two separate auth flows with isolated components, actions, and redirect targets:
 # Lint — 0 errors
 npm run lint
 
-# Build — 18/18 pages
+# Build — 19/19 pages
 npm run build
 ```
 

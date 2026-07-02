@@ -5,6 +5,7 @@ import { XIcon } from "lucide-react"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import CardProduct from "@/components/landing/card-product"
+import { LandingNavbar } from "@/components/landing/landing-navbar"
 
 // ── Auth helper ──
 
@@ -82,74 +83,7 @@ export default async function ProductsPage({
     <div className="min-h-svh bg-white">
       {/* ── Header ── */}
       <header className="bg-[#EFF3FA] pb-[50px] pt-[30px]">
-        {/* Navbar */}
-        <nav className="container mx-auto flex max-w-[1130px] items-center justify-between rounded-3xl bg-[#0D5CD7] p-5">
-          <div className="flex shrink-0 items-center gap-2">
-            <Link href="/" className="text-xl font-bold text-white">
-              Next Commerce
-            </Link>
-          </div>
-          <ul className="flex items-center gap-[30px]">
-            <li className="font-bold text-[#FFC736]">
-              <Link href="/products">Shop</Link>
-            </li>
-            <li className="text-white transition-all duration-300 hover:font-bold hover:text-[#FFC736]">
-              <Link href="/categories">Categories</Link>
-            </li>
-            <li className="text-white transition-all duration-300 hover:font-bold hover:text-[#FFC736]">
-              <Link href="/#brands">Brands</Link>
-            </li>
-            <li className="text-white transition-all duration-300 hover:font-bold hover:text-[#FFC736]">
-              <Link href="/products">Products</Link>
-            </li>
-          </ul>
-          <div className="flex items-center gap-3">
-            <Link href="/cart">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-80">
-                <img
-                  src="/assets/icons/cart.svg"
-                  alt="cart"
-                  className="size-12"
-                />
-              </div>
-            </Link>
-            {user ? (
-              <Link href="/account" className="flex items-center gap-2">
-                <span className="text-sm font-medium text-white">
-                  Hi, {user.name.split(" ")[0]}
-                </span>
-                <div className="flex size-[48px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#E5E5E5] bg-white p-1">
-                  {user.image ? (
-                    <img
-                      src={user.image}
-                      className="size-full rounded-full object-cover"
-                      alt={user.name}
-                    />
-                  ) : (
-                    <span className="text-sm font-semibold text-[#0D5CD7]">
-                      {user.name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/sign-in"
-                  className="rounded-full bg-white px-5 py-3 font-semibold text-[#0D5CD7] transition-all hover:bg-white/90"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/sign-up"
-                  className="rounded-full bg-white px-5 py-3 font-semibold text-[#0D5CD7] transition-all hover:bg-white/90"
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
-        </nav>
+        <LandingNavbar user={user} />
 
         {/* Page Title */}
         <div className="container mx-auto mt-[50px] max-w-[1130px]">
