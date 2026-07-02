@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useActionState } from "react"
+import { useState, useEffect, useMemo, useActionState } from "react"
 import { useCart } from "@/hooks/use-cart"
 import { rupiahFormat } from "@/lib/rupiah-format"
 import { storeOrder } from "../lib/actions"
@@ -20,6 +20,9 @@ function SubmitButton({ isPending }: { isPending: boolean }) {
 export default function CheckoutForm() {
   const { products } = useCart()
 
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   const grandTotal = useMemo(
     () => products.reduce((prev, curr) => prev + curr.price * curr.quantity, 0),
     [products],
@@ -34,6 +37,8 @@ export default function CheckoutForm() {
     { error: null },
   )
 
+  // Wait for client hydration — sessionStorage not available during SSR
+  if (!mounted) return null
   if (products.length === 0) return null
 
   return (
