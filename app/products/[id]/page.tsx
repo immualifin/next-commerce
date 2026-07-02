@@ -1,10 +1,13 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { headers } from "next/headers"
-import { ArrowLeftIcon } from "lucide-react"
+import { Suspense } from "react"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
-import { rupiahFormat } from "@/lib/rupiah-format"
+import { LandingNavbar } from "@/components/landing/landing-navbar"
+import ListProducts from "@/components/landing/list-products"
+import CarouselImages from "./_components/carousel-images"
+import PriceInfo from "./_components/price-info"
 
 // ── Auth helper ──
 
@@ -29,6 +32,46 @@ async function getCurrentUser() {
   }
 }
 
+// ── Dummy testimonials (static, matching reference) ──
+
+const TESTIMONIALS = [
+  {
+    name: "Angga Risky",
+    photo: "/assets/photos/p2.png",
+    date: "12 January 2028",
+    stars: 4,
+    text: "I do really love this product helped me to achieve my first million Lorem ipsum dolor sit amet.",
+  },
+  {
+    name: "Sarifuding",
+    photo: "/assets/photos/p4.png",
+    date: "12 January 2028",
+    stars: 3,
+    text: "I do really love this product helped me to achieve my first million Lorem ipsum dolor sit amet.",
+  },
+  {
+    name: "Ika Nurina",
+    photo: "/assets/photos/p3.png",
+    date: "12 January 2028",
+    stars: 5,
+    text: "I do really love this product helped me to achieve my first million Lorem ipsum dolor sit amet.",
+  },
+  {
+    name: "Sami Mami",
+    photo: "/assets/photos/p1.png",
+    date: "12 January 2028",
+    stars: 4,
+    text: "I do really love this product helped me to achieve my first million Lorem ipsum dolor sit amet.",
+  },
+  {
+    name: "Baronia",
+    photo: "/assets/photos/p2.png",
+    date: "12 January 2028",
+    stars: 3,
+    text: "I do really love this product helped me to achieve my first million Lorem ipsum dolor sit amet.",
+  },
+]
+
 // ── Page ──
 
 export default async function ProductDetailPage({
@@ -45,6 +88,7 @@ export default async function ProductDetailPage({
       category: true,
       brand: true,
       location: true,
+      _count: { select: { orders: true } },
     },
   })
 
@@ -52,153 +96,193 @@ export default async function ProductDetailPage({
     notFound()
   }
 
+  const orderCount = product._count.orders
+
+  const cardProduct = {
+    id: product.id,
+    name: product.name,
+    price: Number(product.price),
+    image_url: product.image[0] ?? "",
+    category_name: product.category.name,
+  }
+
   return (
     <div className="min-h-svh bg-white">
       {/* ── Header ── */}
-      <header className="bg-[#EFF3FA] pb-[50px] pt-[30px]">
-        {/* Navbar */}
-        <nav className="container mx-auto flex max-w-[1130px] items-center justify-between rounded-3xl bg-[#0D5CD7] p-5">
-          <div className="flex shrink-0 items-center gap-2">
-            <Link href="/" className="text-xl font-bold text-white">
-              Next Commerce
-            </Link>
-          </div>
-          <ul className="flex items-center gap-[30px]">
-            <li className="font-bold text-[#FFC736]">
-              <Link href="/products">Shop</Link>
-            </li>
-            <li className="text-white transition-all duration-300 hover:font-bold hover:text-[#FFC736]">
-              <Link href="/categories">Categories</Link>
-            </li>
-            <li className="text-white transition-all duration-300 hover:font-bold hover:text-[#FFC736]">
-              <Link href="/#brands">Brands</Link>
-            </li>
-            <li className="text-white transition-all duration-300 hover:font-bold hover:text-[#FFC736]">
-              <Link href="/products">Products</Link>
-            </li>
-          </ul>
-          <div className="flex items-center gap-3">
-            <Link href="/cart">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-80">
-                <img
-                  src="/assets/icons/cart.svg"
-                  alt="cart"
-                  className="size-12"
-                />
-              </div>
-            </Link>
-            {user ? (
-              <Link href="/account" className="flex items-center gap-2">
-                <span className="text-sm font-medium text-white">
-                  Hi, {user.name.split(" ")[0]}
-                </span>
-                <div className="flex size-[48px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#E5E5E5] bg-white p-1">
-                  {user.image ? (
-                    <img
-                      src={user.image}
-                      className="size-full rounded-full object-cover"
-                      alt={user.name}
-                    />
-                  ) : (
-                    <span className="text-sm font-semibold text-[#0D5CD7]">
-                      {user.name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/sign-in"
-                  className="rounded-full bg-white px-5 py-3 font-semibold text-[#0D5CD7] transition-all hover:bg-white/90"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/sign-up"
-                  className="rounded-full bg-white px-5 py-3 font-semibold text-[#0D5CD7] transition-all hover:bg-white/90"
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
-        </nav>
+      <header className="h-[480px] -mb-[310px] bg-[#EFF3FA] pt-[30px]">
+        <LandingNavbar user={user} />
       </header>
 
-      {/* ── Content ── */}
-      <section className="container mx-auto max-w-[1130px] pb-[100px] pt-[50px]">
-        {/* Back link */}
-        <Link
-          href="/products"
-          className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-[#6A7789] transition-colors hover:text-[#0D5CD7]"
-        >
-          <ArrowLeftIcon className="size-4" />
-          Back to Products
-        </Link>
-
-        <div className="flex gap-[50px]">
-          {/* Product Image */}
-          <div className="flex h-[400px] w-[500px] shrink-0 items-center justify-center overflow-hidden rounded-[30px] bg-[#EFF3FA] p-10">
-            {product.image[0] ? (
-              <img
-                src={product.image[0]}
-                alt={product.name}
-                className="h-full w-full object-contain"
-              />
-            ) : (
-              <img
-                src="/assets/icons/box.svg"
-                alt="no image"
-                className="size-20 opacity-30"
-              />
-            )}
+      {/* ── Title section: breadcrumb + name + rating ── */}
+      <div
+        id="title"
+        className="container mx-auto flex max-w-[1130px] items-center justify-between"
+      >
+        <div className="flex flex-col gap-5">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-5">
+            <Link
+              href="/catalogs"
+              className="text-sm text-[#6A7789] transition-colors hover:text-black"
+            >
+              Shop
+            </Link>
+            <span className="text-sm text-[#6A7789]">/</span>
+            <Link
+              href="/catalogs"
+              className="text-sm text-[#6A7789] transition-colors hover:text-black"
+            >
+              Browse
+            </Link>
+            <span className="text-sm text-[#6A7789]">/</span>
+            <span className="text-sm text-black">Details</span>
           </div>
 
-          {/* Product Info */}
-          <div className="flex flex-1 flex-col gap-6">
-            {/* Stock badge */}
-            <div>
-              <span
-                className={`inline-block rounded-full px-4 py-1.5 text-xs font-semibold ${
-                  product.stock === "ready"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-amber-100 text-amber-700"
-                }`}
-              >
-                {product.stock === "ready" ? "In Stock" : "Pre-Order"}
-              </span>
-            </div>
+          {/* Product name */}
+          <h1 className="text-4xl font-bold leading-9 text-gray-900">
+            {product.name}
+          </h1>
+        </div>
 
-            {/* Name & Price */}
-            <div className="flex flex-col gap-3">
-              <h1 className="text-[32px] font-bold leading-[38px] text-gray-900">
-                {product.name}
-              </h1>
-              <p className="text-[28px] font-bold leading-[34px] text-[#0D5CD7]">
-                {rupiahFormat(Number(product.price))}
-              </p>
-            </div>
+        {/* Star rating + order count */}
+        <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex shrink-0">
+                <img
+                  src={
+                    i < 4
+                      ? "/assets/icons/Star.svg"
+                      : "/assets/icons/Star-gray.svg"
+                  }
+                  alt="star"
+                />
+              </div>
+            ))}
+          </div>
+          <p className="font-semibold text-gray-900">({orderCount})</p>
+        </div>
+      </div>
 
-            {/* Description */}
-            <div>
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[#6A7789]">
-                Description
-              </h2>
-              <p className="text-base leading-relaxed text-gray-700">
-                {product.description}
-              </p>
-            </div>
+      {/* ── Image Carousel ── */}
+      <CarouselImages images={product.image} productName={product.name} />
 
-            {/* Meta: Brand, Category, Location */}
-            <div className="flex flex-wrap gap-6">
-              {/* Brand */}
+      {/* ── Benefits bar ── */}
+      <div
+        id="details-benefits"
+        className="container mx-auto mt-[50px] flex max-w-[1130px] items-center justify-center gap-[50px]"
+      >
+        <div className="flex items-center gap-[10px]">
+          <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#FFC736]">
+            <img src="/assets/icons/star-outline.svg" alt="icon" />
+          </div>
+          <p className="text-sm font-semibold text-gray-900">
+            Include Official <br /> Warranty
+          </p>
+        </div>
+        <div className="h-12 border-[0.5px] border-[#E5E5E5]" />
+        <div className="flex items-center gap-[10px]">
+          <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#FFC736]">
+            <img src="/assets/icons/code-circle.svg" alt="icon" />
+          </div>
+          <p className="text-sm font-semibold text-gray-900">
+            Bonus Mac OS <br /> Capitan Pro
+          </p>
+        </div>
+        <div className="h-12 border-[0.5px] border-[#E5E5E5]" />
+        <div className="flex items-center gap-[10px]">
+          <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#FFC736]">
+            <img src="/assets/icons/like.svg" alt="icon" />
+          </div>
+          <p className="text-sm font-semibold text-gray-900">
+            100% Original <br /> From Factory
+          </p>
+        </div>
+        <div className="h-12 border-[0.5px] border-[#E5E5E5]" />
+        <div className="flex items-center gap-[10px]">
+          <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#FFC736]">
+            <img src="/assets/icons/tag.svg" alt="icon" />
+          </div>
+          <p className="text-sm font-semibold text-gray-900">
+            Free Tax On <br /> Every Sale
+          </p>
+        </div>
+      </div>
+
+      {/* ── Details section: about + testimonials | price sidebar ── */}
+      <div
+        id="details-info"
+        className="container mx-auto mt-[50px] flex max-w-[1030px] justify-between gap-5"
+      >
+        {/* Left column: about + testimonials */}
+        <div className="flex w-full max-w-[650px] flex-col gap-[30px]">
+          {/* About */}
+          <div id="about" className="flex flex-col gap-[10px]">
+            <h3 className="font-semibold text-gray-900">About Product</h3>
+            <p className="leading-[32px] text-gray-700">
+              {product.description}
+            </p>
+          </div>
+
+          {/* Testimonials */}
+          <div id="testi" className="flex flex-col gap-[10px]">
+            <h3 className="font-semibold text-gray-900">
+              Real Testimonials
+            </h3>
+            <div className="grid grid-cols-2 gap-5">
+              {TESTIMONIALS.map((t) => (
+                <div
+                  key={t.name}
+                  className="testi-card flex h-fit flex-col gap-5 rounded-[20px] border border-[#E5E5E5] bg-white p-5"
+                >
+                  <div className="flex">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex shrink-0">
+                        <img
+                          src={
+                            i < t.stars
+                              ? "/assets/icons/Star.svg"
+                              : "/assets/icons/Star-gray.svg"
+                          }
+                          alt="star"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="line-clamp-2 leading-[28px] text-gray-700 hover:line-clamp-none">
+                    {t.text}
+                  </p>
+                  <div className="flex items-center gap-[10px]">
+                    <div className="flex size-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#E5E5E5] p-1">
+                      <img
+                        src={t.photo}
+                        className="h-full w-full rounded-full object-cover"
+                        alt={t.name}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-[2px]">
+                      <p className="text-sm font-semibold leading-[22px] text-gray-900">
+                        {t.name}
+                      </p>
+                      <p className="text-xs leading-[18px] text-[#6A7789]">
+                        {t.date}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Brand & Location info */}
+          <div className="flex flex-wrap gap-6">
+            {product.brand.logo && (
               <div className="flex items-center gap-3">
                 <div className="flex size-12 items-center justify-center rounded-full bg-[#EFF3FA] p-2">
                   <img
                     src={product.brand.logo}
                     alt={product.brand.name}
-                    className="size-full object-contain"
+                    className="h-full w-full object-contain"
                   />
                 </div>
                 <div>
@@ -206,49 +290,56 @@ export default async function ProductDetailPage({
                     Brand
                   </p>
                   <Link
-                    href={`/products?brand=${product.brand.id}`}
+                    href={`/catalogs?brand=${product.brand.id}`}
                     className="text-sm font-semibold text-gray-900 hover:text-[#0D5CD7]"
                   >
                     {product.brand.name}
                   </Link>
                 </div>
               </div>
-
-              {/* Category */}
-              <div className="flex flex-col">
-                <p className="text-xs font-medium uppercase tracking-wide text-[#6A7789]">
-                  Category
-                </p>
-                <Link
-                  href={`/products?category=${product.category.id}`}
-                  className="text-sm font-semibold text-gray-900 hover:text-[#0D5CD7]"
-                >
-                  {product.category.name}
-                </Link>
-              </div>
-
-              {/* Location */}
-              <div className="flex flex-col">
-                <p className="text-xs font-medium uppercase tracking-wide text-[#6A7789]">
-                  Location
-                </p>
-                <span className="text-sm font-semibold text-gray-900">
-                  {product.location.name}
-                </span>
-              </div>
+            )}
+            <div className="flex flex-col">
+              <p className="text-xs font-medium uppercase tracking-wide text-[#6A7789]">
+                Category
+              </p>
+              <Link
+                href={`/catalogs?category=${product.category.id}`}
+                className="text-sm font-semibold text-gray-900 hover:text-[#0D5CD7]"
+              >
+                {product.category.name}
+              </Link>
             </div>
-
-            {/* Add to Cart */}
-            <button
-              disabled
-              className="mt-4 w-fit rounded-full bg-[#0D5CD7] px-10 py-4 font-semibold text-white opacity-50 transition-all hover:bg-[#0D5CD7]/90 enabled:hover:bg-[#0D5CD7]/90"
-              title="Cart coming soon"
-            >
-              Add to Cart — Coming Soon
-            </button>
+            <div className="flex flex-col">
+              <p className="text-xs font-medium uppercase tracking-wide text-[#6A7789]">
+                Location
+              </p>
+              <span className="text-sm font-semibold text-gray-900">
+                {product.location.name}
+              </span>
+            </div>
           </div>
         </div>
-      </section>
+
+        {/* Right: PriceInfo widget */}
+        <PriceInfo isLogin={!!user} item={cardProduct} />
+      </div>
+
+      {/* ── Recommendations ── */}
+      <div
+        id="recommendations"
+        className="container mx-auto mt-[70px] flex max-w-[1130px] flex-col gap-[30px] pb-[100px]"
+      >
+        <Suspense fallback={<span className="text-[#6A7789]">Loading...</span>}>
+          <ListProducts
+            title={
+              <>
+                Other Products <br /> You Might Need
+              </>
+            }
+            isShowDetail={false}
+          />
+        </Suspense>
+      </div>
 
       {/* ── Footer ── */}
       <footer className="border-t border-[#E5E5E5] bg-white px-6 py-8 text-center text-sm text-[#6A7789]">
