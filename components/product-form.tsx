@@ -161,6 +161,7 @@ export function ProductForm({
         </SheetHeader>
 
         <form
+          key={product?.id ?? "new"}
           ref={formRef}
           onSubmit={handleSubmit}
           className="mt-6 flex flex-col gap-4"
