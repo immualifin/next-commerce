@@ -159,6 +159,7 @@ components/
 │   ├── list-products.tsx        # Product grid
 │   ├── card-product.tsx         # Product card
 │   └── list-brands.tsx          # Brand logo grid
+├── navigation-progress.tsx         # nprogress-style top bar overlay (no click interception)
 ├── app-sidebar.tsx              # Sidebar shell + menu data
 ├── nav-main.tsx                 # Main navigation (with active state)
 ├── nav-secondary.tsx            # Secondary nav (Settings, Help)

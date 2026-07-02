@@ -351,21 +351,61 @@ app/brands/
 | Wishlist | `hooks/use-wishlist.ts` — zustand store (sessionStorage), `addItem`, `removeItem`, `isInWishlist` |
 | Wishlist button | `price-info.tsx` — "Save to Wishlist" wired: `useWishlist().addItem()` + sonner toast, button style changes when already saved |
 | Wishlist page | `app/wishlist/page.tsx` — shows saved items with image, price, Add to Cart, Remove button, empty state |
-| Progress bar | `components/progress-bar.tsx` — custom nprogress bar, hooks into link clicks + history.pushState |
+| Progress bar | `components/progress-bar.tsx` — custom nprogress bar, hooks into link clicks + history.pushState **(removed in Phase 22 — caused page reload loop, replaced with `navigation-progress.tsx`)** |
 | User dropdown | Navbar avatar click → My Wishlist, My Orders, Logout (with `z-50` fix) |
 
 **New files:**
 ```
 hooks/use-cart.ts                        # Zustand cart store
+hooks/use-wishlist.ts                    # Zustand wishlist store
+components/progress-bar.tsx              # nprogress bar (removed in Phase 22)
 app/carts/
 ├── page.tsx                             # Server Component
 ├── _components/
 │   ├── cart-products.tsx                # Cart item list + empty state
 │   └── checkout-form.tsx                # Shipping + payment + checkout
 └── lib/actions.ts                       # storeOrder server action
+app/wishlist/
+├── page.tsx                             # Wishlist page
+└── _components/
+    └── wishlist-items.tsx               # Wishlist item list + empty state
 ```
 
 **New dependency:** `zustand` — lightweight state management (~1KB gzipped)
+
+### Phase 22 — UX Polish: Progress Bar, Button States & Hover Effects
+
+| Step | Detail |
+|------|--------|
+| Navigation progress | Hapus nprogress (`components/progress-bar.tsx`) — intercept click + modifikasi `history.pushState` menyebabkan page reload loop (14x GET pada product detail page) |
+| New progress bar | `components/navigation-progress.tsx` — Client Component overlay tipis 0.5px di `<body>`, `pointer-events-none`, nggak ganti konten halaman. Animasi `cubic-bezier(0.1, 0.8, 0.2, 1)` — mulai cepat lalu melambat menuju 94%, selesai ke 100% + fade out saat URL berubah |
+| Mechanism | Delegated `click` listener pada `<a>` (hanya internal link) → `start()` bar. `useEffect` pada `pathname`/`searchParams` → `done()` bar. **Tidak ada manipulasi history.pushState.** |
+| Root layout | `<NavigationProgress />` ditambahkan di `app/layout.tsx` sebagai sibling dari `<TooltipProvider>` |
+| Wishlist disabled | Tombol "Saved to Wishlist" sekarang abu-abu penuh (`border-gray-300 bg-gray-100 text-gray-400`) + `disabled={alreadyWishlisted}` — tidak bisa diklik lagi, jelas terlihat nonaktif |
+| Add to Cart loading | `isAdding` state — klik tombol muncul spinner `<Loader2>` + "Adding..." + tombol disabled, double-click dicegah |
+| Add to Cart hover | `hover:bg-[#0A4BB5]` + `hover:shadow-lg hover:shadow-[#0D5CD7]/25` — glow biru + transisi smooth |
+| Checkout Now | Submit button: spinner `<Loader2>` + "Processing..." saat `isPending`, hover effect sama dengan Add to Cart |
+| Contact Sales | `hover:border-[#0D5CD7]` + `hover:bg-[#0D5CD7]/5` + `hover:text-[#0D5CD7]` + `hover:shadow-md` — subtle blue tint |
+
+**Changed files:**
+```
+components/
+└── navigation-progress.tsx           # NEW: nprogress-style bar tanpa click interception
+app/
+├── layout.tsx                         # Import + render <NavigationProgress />
+├── loading.tsx                        # DELETED: mengganti seluruh halaman → layar hitam
+├── globals.css                        # @keyframes nprogress + --animate-nprogress
+└── products/[id]/_components/
+    └── price-info.tsx                 # Add to Cart: isAdding + spinner + hover. Wishlist: disabled + abu-abu
+app/carts/_components/
+└── checkout-form.tsx                  # Checkout Now: spinner + hover. Contact Sales: hover
+```
+
+**Dependencies removed:**
+```
+nprogress          # 0.2.0 — removed, bug pada App Router
+@types/nprogress   # removed (dev)
+```
 
 ### Phase 20 — Multi-Image File Upload for Products
 
@@ -612,6 +652,7 @@ components/
 │   ├── card-product.tsx            # Individual product card
 │   └── list-brands.tsx             # Brand logo grid (5-col)
 ├── user-dropdown.tsx               # Public user dropdown (unused on landing — kept for future use)
+├── navigation-progress.tsx         # nprogress-style top bar overlay (no click interception, no history manipulation)
 ├── app-sidebar.tsx                 # Sidebar shell + menu data (7 main items)
 ├── nav-main.tsx                    # Main nav (Link + usePathname active state)
 ├── nav-secondary.tsx               # Secondary nav (Settings, Help)

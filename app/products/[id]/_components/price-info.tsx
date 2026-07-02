@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Heart } from "lucide-react"
+import { Heart, Loader2 } from "lucide-react"
 import { rupiahFormat } from "@/lib/rupiah-format"
 import { useCart } from "@/hooks/use-cart"
 import { useWishlist } from "@/hooks/use-wishlist"
@@ -31,6 +31,7 @@ export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
   const { addProduct } = useCart()
   const { addItem, isInWishlist } = useWishlist()
   const router = useRouter()
+  const [isAdding, setIsAdding] = useState(false)
 
   // Prevent hydration mismatch: wishlist state lives in sessionStorage
   // which is only available on the client.
@@ -38,6 +39,8 @@ export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
   useEffect(() => setMounted(true), [])
 
   function handleAddToCart() {
+    if (isAdding) return
+    setIsAdding(true)
     addProduct({
       id: item.id,
       name: item.name,
@@ -100,25 +103,33 @@ export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
         {/* Buttons */}
         <div className="flex flex-col gap-3">
           <button
-            disabled={!isLogin}
+            disabled={!isLogin || isAdding}
             type="button"
             onClick={handleAddToCart}
-            className="rounded-full bg-[#0D5CD7] p-[12px_24px] text-center font-semibold text-white disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0D5CD7] p-[12px_24px] text-center font-semibold text-white transition-all hover:bg-[#0A4BB5] hover:shadow-lg hover:shadow-[#0D5CD7]/25 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#0D5CD7] disabled:hover:shadow-none"
           >
-            Add to Cart
+            {isAdding ? (
+              <>
+                <Loader2 className="size-5 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              "Add to Cart"
+            )}
           </button>
           <button
             type="button"
+            disabled={alreadyWishlisted}
             onClick={handleSaveToWishlist}
             className={`rounded-full border p-[12px_24px] text-center font-semibold transition-all ${
               alreadyWishlisted
-                ? "border-[#FFC736] bg-[#FFC736]/10 text-[#0D5CD7]"
+                ? "cursor-default border-gray-300 bg-gray-100 text-gray-400"
                 : "border-[#E5E5E5] bg-white text-gray-900 hover:border-[#FFC736]"
             }`}
           >
             {alreadyWishlisted ? (
               <span className="inline-flex items-center gap-2">
-                <Heart className="size-5 fill-[#0D5CD7] text-[#0D5CD7]" />
+                <Heart className="size-5 fill-gray-400 text-gray-400" />
                 Saved to Wishlist
               </span>
             ) : (

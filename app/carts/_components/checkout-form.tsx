@@ -4,15 +4,23 @@ import { useState, useEffect, useMemo, useActionState } from "react"
 import { useCart } from "@/hooks/use-cart"
 import { rupiahFormat } from "@/lib/rupiah-format"
 import { storeOrder } from "../lib/actions"
+import { Loader2 } from "lucide-react"
 
 function SubmitButton({ isPending }: { isPending: boolean }) {
   return (
     <button
       type="submit"
       disabled={isPending}
-      className="rounded-full bg-[#0D5CD7] p-[12px_24px] text-center font-semibold text-white disabled:opacity-60"
+      className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0D5CD7] p-[12px_24px] text-center font-semibold text-white transition-all hover:bg-[#0A4BB5] hover:shadow-lg hover:shadow-[#0D5CD7]/25 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#0D5CD7] disabled:hover:shadow-none"
     >
-      {isPending ? "Processing..." : "Checkout Now"}
+      {isPending ? (
+        <>
+          <Loader2 className="size-5 animate-spin" />
+          Processing...
+        </>
+      ) : (
+        "Checkout Now"
+      )}
     </button>
   )
 }
@@ -225,7 +233,7 @@ export default function CheckoutForm() {
             <SubmitButton isPending={isPending} />
             <button
               type="button"
-              className="rounded-full border border-[#E5E5E5] bg-white p-[12px_24px] text-center font-semibold text-gray-700"
+              className="rounded-full border border-[#E5E5E5] bg-white p-[12px_24px] text-center font-semibold text-gray-700 transition-all hover:border-[#0D5CD7] hover:bg-[#0D5CD7]/5 hover:text-[#0D5CD7] hover:shadow-md"
             >
               Contact Sales
             </button>
