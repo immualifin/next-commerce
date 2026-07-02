@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo } from "react"
-import { useFormState, useFormStatus } from "react-dom"
+import { useMemo, useActionState } from "react"
+import { useFormStatus } from "react-dom"
 import { useCart } from "@/hooks/use-cart"
 import { rupiahFormat } from "@/lib/rupiah-format"
 import { storeOrder } from "../lib/actions"
@@ -32,7 +32,7 @@ export default function CheckoutForm() {
     _prevState: { error: string | null },
     formData: FormData,
   ) => storeOrder(_prevState, formData, grandTotal, products)
-  const [state, formAction] = useFormState(storeOrderWithTotal, { error: null })
+  const [state, formAction] = useActionState(storeOrderWithTotal, { error: null })
 
   if (products.length === 0) return null
 
