@@ -61,7 +61,6 @@ export const productSchema = z.object({
   description: z.string().min(1, "Description is required"),
   price: z.string().min(1, "Price is required"),
   stock: z.enum(["ready", "preorder"]),
-  image: z.string().min(1, "At least one image URL is required"),
   brandId: z.string().min(1, "Brand is required"),
   categoryId: z.string().min(1, "Category is required"),
   locationId: z.string().min(1, "Location is required"),
