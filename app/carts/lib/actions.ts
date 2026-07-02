@@ -90,9 +90,9 @@ async function createXenditInvoice(params: {
   })
 
   if (!res.ok) {
-    const err = await res.text()
+    const err = await res.json().catch(() => ({ message: "Unknown error" }))
     console.error("[Xendit] Failed to create invoice", err)
-    throw new Error("Failed to create payment invoice")
+    throw new Error(err.message ?? "Failed to create payment invoice")
   }
 
   const data = await res.json()
@@ -179,7 +179,9 @@ export async function storeOrder(
 
     redirect(invoiceUrl)
   } catch (e) {
+    const message =
+      e instanceof Error ? e.message : "Failed to place order. Please try again."
     console.error("[storeOrder]", e)
-    return { error: "Failed to place order. Please try again." }
+    return { error: message }
   }
 }
