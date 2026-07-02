@@ -5,6 +5,7 @@ import {
   useEffect,
   useState,
   useRef,
+  startTransition,
   type ChangeEvent,
   type FormEvent,
 } from "react"
@@ -141,8 +142,8 @@ export function ProductForm({
       fd.append("existing", url)
     }
 
-    // Dispatch via the useActionState action
-    formAction(fd)
+    // Dispatch via the useActionState action (must be wrapped in startTransition)
+    startTransition(() => formAction(fd))
   }
 
   const hasImages = keptImages.length > 0 || newPreviews.length > 0
