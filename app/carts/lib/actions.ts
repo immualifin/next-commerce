@@ -30,7 +30,10 @@ function generateCode(): string {
   return result
 }
 
-async function getUserId(): Promise<string | null> {
+async function getCurrentSession(): Promise<{
+  userId: string
+  email: string
+} | null> {
   try {
     const h = await headers()
     const cookieHeader = h.get("cookie")
@@ -39,10 +42,61 @@ async function getUserId(): Promise<string | null> {
     const session = await auth.api.getSession({
       headers: new Headers({ cookie: cookieHeader }),
     })
-    return session?.user?.id ?? null
+    if (!session?.user) return null
+
+    return {
+      userId: session.user.id,
+      email: session.user.email ?? "",
+    }
   } catch {
     return null
   }
+}
+
+/**
+ * Create a Xendit Invoice and return the payment URL.
+ */
+async function createXenditInvoice(params: {
+  externalId: string
+  amount: number
+  payerEmail: string
+  description: string
+}): Promise<string> {
+  const secretKey = process.env.XENDIT_SECRET_KEY
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+
+  if (!secretKey) {
+    console.error("[Xendit] XENDIT_SECRET_KEY is not set")
+    throw new Error("Payment configuration error")
+  }
+
+  const auth = Buffer.from(`${secretKey}:`).toString("base64")
+
+  const res = await fetch("https://api.xendit.co/v2/invoices", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      external_id: params.externalId,
+      amount: params.amount,
+      currency: "IDR",
+      payer_email: params.payerEmail || "customer@example.com",
+      description: params.description,
+      success_redirect_url: `${appUrl}/?checkout=success`,
+      failure_redirect_url: `${appUrl}/carts?checkout=failed`,
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    console.error("[Xendit] Failed to create invoice", err)
+    throw new Error("Failed to create payment invoice")
+  }
+
+  const data = await res.json()
+  return data.invoice_url as string
 }
 
 // ── Action ──
@@ -53,9 +107,9 @@ export async function storeOrder(
   total: number,
   products: CartItem[],
 ): Promise<{ error: string | null }> {
-  const userId = await getUserId()
+  const session = await getCurrentSession()
 
-  if (!userId) {
+  if (!session) {
     redirect("/sign-in")
   }
 
@@ -76,13 +130,15 @@ export async function storeOrder(
     return { error: parsed.error.issues[0].message }
   }
 
+  const orderCode = generateCode()
+
   try {
     // Create Order + OrderDetail + OrderProducts in a transaction
-    const order = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       const o = await tx.order.create({
         data: {
-          code: generateCode(),
-          userId,
+          code: orderCode,
+          userId: session.userId,
           total,
           status: "pending",
         },
@@ -108,17 +164,22 @@ export async function storeOrder(
           subtotal: p.price * p.quantity,
         })),
       })
-
-      return o
     })
 
     revalidatePath("/dashboard/orders")
     revalidatePath("/products")
+
+    // Create Xendit invoice and redirect to payment page
+    const invoiceUrl = await createXenditInvoice({
+      externalId: orderCode,
+      amount: total,
+      payerEmail: session.email,
+      description: `Next Commerce Order #${orderCode}`,
+    })
+
+    redirect(invoiceUrl)
   } catch (e) {
     console.error("[storeOrder]", e)
     return { error: "Failed to place order. Please try again." }
   }
-
-  // Redirect to success page (or home for now)
-  redirect("/?checkout=success")
 }

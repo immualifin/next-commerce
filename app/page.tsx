@@ -2,6 +2,7 @@ import Link from "next/link"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { LandingNavbar } from "@/components/landing/landing-navbar"
+import CheckoutClearCart from "@/components/checkout-clear-cart"
 import ListCategory from "@/components/landing/list-category"
 import ListProducts from "@/components/landing/list-products"
 import ListBrands from "@/components/landing/list-brands"
@@ -38,11 +39,30 @@ const TESTIMONIALS = [
   { img: "/assets/photos/p4.png", quote: "Big deals ever!", name: "Udin Sarifun" },
 ]
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>
+}) {
   const user = await getLandingUser()
+  const sp = await searchParams
+  const checkoutSuccess = sp.checkout === "success"
 
   return (
     <div className="min-h-svh bg-white">
+      {/* ── Checkout success banner ── */}
+      {checkoutSuccess && (
+        <>
+          <CheckoutClearCart />
+          <div className="bg-green-50 px-6 py-4 text-center">
+            <p className="text-sm font-medium text-green-700">
+              ✅ Payment successful! Your order has been placed. Thank you for
+              shopping with us.
+            </p>
+          </div>
+        </>
+      )}
+
       {/* ── Header ── */}
       <header className="bg-[#EFF3FA] pb-[50px] pt-[30px]">
         <LandingNavbar user={user} />
