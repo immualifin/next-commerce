@@ -191,9 +191,7 @@ export default async function CatalogsPage({
         <LandingNavbar user={user} />
       </header>
 
-      <div className="bg-white">
-        <SearchBar />
-      </div>
+      <SearchBar />
 
       {/* ── Content: Filters + Products ── */}
       <div className="container mx-auto mt-[50px] flex max-w-[1130px] gap-[30px] pb-[100px]">
