@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { Heart } from "lucide-react"
 import { rupiahFormat } from "@/lib/rupiah-format"
 import { useCart } from "@/hooks/use-cart"
 import { useWishlist } from "@/hooks/use-wishlist"
@@ -115,7 +116,14 @@ export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
                 : "border-[#E5E5E5] bg-white text-gray-900 hover:border-[#FFC736]"
             }`}
           >
-            {alreadyWishlisted ? "♥ Saved to Wishlist" : "Save to Wishlist"}
+            {alreadyWishlisted ? (
+              <span className="inline-flex items-center gap-2">
+                <Heart className="size-5 fill-[#0D5CD7] text-[#0D5CD7]" />
+                Saved to Wishlist
+              </span>
+            ) : (
+              "Save to Wishlist"
+            )}
           </button>
         </div>
       </div>
