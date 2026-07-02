@@ -341,9 +341,13 @@ app/brands/
 | Cart page | `app/carts/page.tsx` — Server Component: LandingNavbar + breadcrumb + CartProducts + CheckoutForm |
 | Cart items | `_components/cart-products.tsx` — Client Component: product image, name, category, price, qty +/-, total, Remove button + empty state (Browse Products CTA) |
 | Checkout form | `_components/checkout-form.tsx` — Client Component: shipping address (name, address, city, postal code, phone, notes) + payment summary (subtotal, fees, grand total) |
-| Server action | `lib/actions.ts` — `storeOrder`: Zod validasi shipping → `prisma.$transaction` (Order + OrderDetail + OrderProduct) → redirect `/?checkout=success` |
+| Server action | `lib/actions.ts` — `storeOrder`: Zod validasi shipping → `prisma.$transaction` (Order + OrderDetail + OrderProduct) → `createXenditInvoice()` → redirect ke Xendit payment page |
+| Xendit | `lib/xendit.ts` — Xendit SDK client, `POST /v2/invoices` (Basic auth), `success_redirect_url` → `/?checkout=success`, `failure_redirect_url` → `/carts` |
+| Success flow | Landing page baca `?checkout=success` → green banner + `CheckoutClearCart` client component (clear cart on mount) |
 | Add to Cart | `price-info.tsx` — "Add to Cart" now wired: `useCart().addProduct()` + `router.push("/carts")` |
 | Fix | `useFormState` → `useActionState` (React 19 rename) |
+| Fix | Re-throw `NEXT_REDIRECT` error — `redirect()` throws internal error, tidak boleh di-catch |
+| Fix | Form values preserved on error — `useActionState` + `<form action>` uncontrolled inputs |
 
 **New files:**
 ```
@@ -511,6 +515,7 @@ app/
 | Drawer | Vaul |
 | Icons | Lucide React |
 | Cart State | Zustand (sessionStorage persist) |
+| Payment | Xendit Invoice API (`xendit-node`) |
 
 ## Project Structure
 

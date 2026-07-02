@@ -1,21 +1,18 @@
 "use client"
 
 import { useMemo, useActionState } from "react"
-import { useFormStatus } from "react-dom"
 import { useCart } from "@/hooks/use-cart"
 import { rupiahFormat } from "@/lib/rupiah-format"
 import { storeOrder } from "../lib/actions"
 
-function SubmitButton() {
-  const { pending } = useFormStatus()
-
+function SubmitButton({ isPending }: { isPending: boolean }) {
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={isPending}
       className="rounded-full bg-[#0D5CD7] p-[12px_24px] text-center font-semibold text-white disabled:opacity-60"
     >
-      {pending ? "Processing..." : "Checkout Now"}
+      {isPending ? "Processing..." : "Checkout Now"}
     </button>
   )
 }
@@ -32,7 +29,10 @@ export default function CheckoutForm() {
     _prevState: { error: string | null },
     formData: FormData,
   ) => storeOrder(_prevState, formData, grandTotal, products)
-  const [state, formAction] = useActionState(storeOrderWithTotal, { error: null })
+  const [state, formAction, isPending] = useActionState(
+    storeOrderWithTotal,
+    { error: null },
+  )
 
   if (products.length === 0) return null
 
@@ -217,7 +217,7 @@ export default function CheckoutForm() {
 
           {/* Buttons */}
           <div className="flex flex-col gap-3">
-            <SubmitButton />
+            <SubmitButton isPending={isPending} />
             <button
               type="button"
               className="rounded-full border border-[#E5E5E5] bg-white p-[12px_24px] text-center font-semibold text-gray-700"

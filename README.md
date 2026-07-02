@@ -14,6 +14,7 @@ Ecommerce admin dashboard + customer storefront built with **Next.js 16**, **Pri
 - **Table**: @tanstack/react-table + @dnd-kit
 - **Toast**: Sonner
 - **Cart State**: Zustand (sessionStorage persist)
+- **Payment**: Xendit Invoice API
 - **Icons**: Lucide React
 
 ## Getting Started
