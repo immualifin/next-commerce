@@ -62,7 +62,7 @@ export function LandingNavbar({ user }: LandingNavbarProps) {
 
       {/* Right side: Cart + Auth */}
       <div className="flex items-center gap-3">
-        <Link href="/cart">
+        <Link href="/carts">
           <div className="flex size-12 shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-80">
             <img
               src="/assets/icons/cart.svg"

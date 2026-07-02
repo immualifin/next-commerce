@@ -1,6 +1,8 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { rupiahFormat } from "@/lib/rupiah-format"
+import { useCart } from "@/hooks/use-cart"
 
 interface PriceInfoProps {
   item: {
@@ -22,6 +24,21 @@ const features = [
 ]
 
 export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
+  const { addProduct } = useCart()
+  const router = useRouter()
+
+  function handleAddToCart() {
+    addProduct({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image_url: item.image_url,
+      category_name: item.category_name,
+      quantity: 1,
+    })
+    router.push("/carts")
+  }
+
   return (
     <div className="flex w-[302px] shrink-0 flex-col gap-5">
       {/* Price card */}
@@ -50,6 +67,7 @@ export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
           <button
             disabled={!isLogin}
             type="button"
+            onClick={handleAddToCart}
             className="rounded-full bg-[#0D5CD7] p-[12px_24px] text-center font-semibold text-white disabled:opacity-60"
           >
             Add to Cart
