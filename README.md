@@ -183,6 +183,8 @@ prisma/
 ├── seed.ts                      # Superadmin seeder
 ├── config.ts
 └── migrations/
+public/
+└── uploads/products/            # Uploaded product images (gitignored)
 ```
 
 ## Routes
@@ -206,7 +208,7 @@ prisma/
 |-----|-------------|
 | `/dashboard` | Dashboard overview (charts, cards, table) |
 | `/dashboard/sign-in` | Admin sign-in (email/password + Google OAuth) |
-| `/dashboard/products` | Product catalog CRUD |
+| `/dashboard/products` | Product catalog CRUD — multi-image file upload, soft delete |
 | `/dashboard/orders` | Order management + shipping detail |
 | `/dashboard/customers` | User management (edit/delete only) |
 | `/dashboard/brands` | Brand CRUD |

@@ -332,6 +332,30 @@ app/brands/
 └── page.tsx                          # Customer-facing brand page (/brands) — grid + product count
 ```
 
+### Phase 20 — Multi-Image File Upload for Products
+
+| Step | Detail |
+|------|--------|
+| Image input | Ganti input teks (URLs comma-separated) → `<input type="file" multiple accept="image/*">` |
+| File storage | Upload file disimpan ke `public/uploads/products/` via `fs.writeFile` di server action |
+| Unique filenames | Nama file: `{timestamp}-{random}.{ext}` untuk menghindari collision |
+| Preview grid | Grid 3-col: thumbnail existing images + preview file baru sebelum submit |
+| Remove existing | Tombol X merah pada hover — hapus gambar yang sudah ada (tidak dikirim ke server via `name=existing` hidden input) |
+| Remove new | Tombol X merah — hapus preview + `File` dari `pendingFiles` state |
+| Form submission | Intercept `onSubmit` → build `FormData` manual: append `pendingFiles` (name=images) + `keptImages` (name=existing) |
+| `startTransition` | `formAction(fd)` dibungkus `startTransition` (React 19 requirement untuk useActionState di luar action prop) |
+| Component split | `ProductForm` (outer, Sheet wrapper) + `ProductFormContent` (inner, `key={product?.id}`) — state gambar re-inisialisasi tiap ganti produk |
+| Validation | Hapus field `image` dari `productSchema` — validasi gambar dilakukan manual di server action (min 1 image) |
+| Directory | `public/uploads/` dengan `.gitignore` — exclude semua file kecuali `.gitkeep` |
+
+**Changed files:**
+```
+components/product-form.tsx            # File upload UI + preview grid + manual FormData submission
+app/(admin)/dashboard/products/actions.ts  # saveFiles(), parseImages() — fs.writeFile + fs.mkdir
+lib/validations.ts                     # Hapus field image dari productSchema
+public/uploads/                        # Direktori upload + .gitignore
+```
+
 ### Phase 19 — Product Detail Page Redesign
 
 | Step | Detail |
@@ -574,6 +598,9 @@ prisma/
 ├── seed.ts                         # Superadmin seeder
 ├── config.ts                       # Prisma 6 config
 └── migrations/
+public/
+└── uploads/
+    └── products/                   # Uploaded product images (gitignored, .gitkeep tracked)
 ```
 
 ## Route Groups
@@ -869,7 +896,7 @@ Server components pass data to client components via props. Prisma types (BigInt
 ### Product-specific patterns
 
 - **price** (BigInt): Form input as string → `BigInt(price)` in action
-- **image** (String[]): Comma-separated string input → `.split(",").map(s => s.trim()).filter(Boolean)`
+- **image** (String[]): File upload via `<input type="file" multiple>` → `fs.writeFile` ke `public/uploads/products/` → simpan path di database. Edit: existing images via hidden input `name=existing`, boleh dihapus (X button)
 - **stock** (enum): Select component with `StockProduct` values
 - **FK selects**: Brand, Category, Location dropdowns fetched in page, passed as props
 
