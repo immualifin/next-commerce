@@ -348,6 +348,11 @@ app/brands/
 | Fix | `useFormState` → `useActionState` (React 19 rename) |
 | Fix | Re-throw `NEXT_REDIRECT` error — `redirect()` throws internal error, tidak boleh di-catch |
 | Fix | Form values preserved on error — `useActionState` + `<form action>` uncontrolled inputs |
+| Wishlist | `hooks/use-wishlist.ts` — zustand store (sessionStorage), `addItem`, `removeItem`, `isInWishlist` |
+| Wishlist button | `price-info.tsx` — "Save to Wishlist" wired: `useWishlist().addItem()` + sonner toast, button style changes when already saved |
+| Wishlist page | `app/wishlist/page.tsx` — shows saved items with image, price, Add to Cart, Remove button, empty state |
+| Progress bar | `components/progress-bar.tsx` — custom nprogress bar, hooks into link clicks + history.pushState |
+| User dropdown | Navbar avatar click → My Wishlist, My Orders, Logout (with `z-50` fix) |
 
 **New files:**
 ```
@@ -593,6 +598,10 @@ app/
 │   │   ├── cart-products.tsx        # Cart item list
 │   │   └── checkout-form.tsx        # Shipping + payment form
 │   └── lib/actions.ts               # storeOrder server action
+├── wishlist/
+│   ├── page.tsx                    # Saved wishlist items
+│   └── _components/
+│       └── wishlist-items.tsx       # Wishlist item list + empty state
 ├── _data/
 │   └── landing.ts                  # Prisma-backed data functions (categories, products, brands)
 components/
@@ -623,7 +632,8 @@ components/
 └── ui/                             # 22 shadcn v4 components (@base-ui/react)
 hooks/
 ├── use-mobile.ts                   # Mobile breakpoint detection
-└── use-cart.ts                     # Zustand cart store
+├── use-cart.ts                     # Zustand cart store
+└── use-wishlist.ts                 # Zustand wishlist store
 lib/
 ├── auth.ts                         # Better Auth server config
 ├── auth-client.ts                  # Better Auth client (for OAuth + signOut)

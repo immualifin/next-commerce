@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { headers } from "next/headers"
-import { HeartIcon } from "lucide-react"
 import { auth } from "@/lib/auth"
 import { LandingNavbar } from "@/components/landing/landing-navbar"
+import WishlistItems from "./_components/wishlist-items"
 
 async function getCurrentUser() {
   try {
@@ -27,15 +27,16 @@ export default async function WishlistPage() {
       <header className="h-[480px] -mb-[310px] bg-[#EFF3FA] pt-[30px]">
         <LandingNavbar user={user} />
       </header>
-      <div className="container mx-auto flex max-w-[1130px] flex-col items-center justify-center py-32">
-        <div className="flex size-20 items-center justify-center rounded-full bg-[#EFF3FA]">
-          <HeartIcon className="size-10 text-[#6A7789]" />
+      <div className="container mx-auto mt-[50px] max-w-[1130px] pb-[100px]">
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center gap-5">
+            <Link href="/catalogs" className="text-sm text-[#6A7789] transition-colors hover:text-black">Shop</Link>
+            <span className="text-sm text-[#6A7789]">/</span>
+            <span className="text-sm text-black">Wishlist</span>
+          </div>
+          <h1 className="text-4xl font-bold leading-9 text-gray-900">My Wishlist</h1>
         </div>
-        <h1 className="mt-6 text-2xl font-bold text-gray-900">My Wishlist</h1>
-        <p className="mt-2 text-sm text-[#6A7789]">Coming soon — your saved items will appear here.</p>
-        <Link href="/catalogs" className="mt-6 rounded-full bg-[#0D5CD7] px-6 py-3 font-semibold text-white transition-all hover:bg-[#0D5CD7]/90">
-          Browse Products
-        </Link>
+        <WishlistItems />
       </div>
     </div>
   )

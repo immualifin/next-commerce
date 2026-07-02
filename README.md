@@ -147,6 +147,9 @@ app/
 │   ├── page.tsx                 # Shopping cart + checkout (/carts)
 │   ├── _components/             # CartProducts, CheckoutForm
 │   └── lib/actions.ts           # storeOrder server action
+├── wishlist/
+│   ├── page.tsx                 # Wishlist (/wishlist)
+│   └── _components/             # WishlistItems
 ├── _data/
 │   └── landing.ts               # Prisma-backed data functions (categories, products, brands)
 components/
@@ -184,7 +187,8 @@ lib/
 └── category-icons.ts            # Category name → SVG icon mapping
 hooks/
 ├── use-mobile.ts                # Mobile detection hook
-└── use-cart.ts                  # Zustand cart store
+├── use-cart.ts                  # Zustand cart store
+└── use-wishlist.ts              # Zustand wishlist store
 prisma/
 ├── schema.prisma                # Auth + ecommerce models (11 tables)
 ├── seed.ts                      # Superadmin seeder
@@ -209,6 +213,7 @@ public/
 | `/brands` | Brand listing — 5 brands from DB with product counts and logos |
 | `/catalogs` | Full catalog — search, filter sidebar (price, stock, brand, category, location), product grid |
 | `/carts` | Shopping cart — item list, shipping form, checkout → order created |
+| `/wishlist` | Wishlist — saved items with Add to Cart and Remove actions |
 
 ### Admin Dashboard
 

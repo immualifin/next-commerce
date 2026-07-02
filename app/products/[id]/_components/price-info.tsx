@@ -1,8 +1,10 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { rupiahFormat } from "@/lib/rupiah-format"
 import { useCart } from "@/hooks/use-cart"
+import { useWishlist } from "@/hooks/use-wishlist"
 
 interface PriceInfoProps {
   item: {
@@ -25,6 +27,7 @@ const features = [
 
 export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
   const { addProduct } = useCart()
+  const { addItem, isInWishlist } = useWishlist()
   const router = useRouter()
 
   function handleAddToCart() {
@@ -38,6 +41,31 @@ export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
     })
     router.push("/carts")
   }
+
+  function handleSaveToWishlist() {
+    if (!isLogin) {
+      router.push("/sign-in")
+      return
+    }
+
+    if (isInWishlist(item.id)) {
+      toast.info("Already in your wishlist")
+      return
+    }
+
+    addItem({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image_url: item.image_url,
+      category_name: item.category_name,
+    })
+    toast.success("Saved to wishlist! ❤️", {
+      description: item.name,
+    })
+  }
+
+  const alreadyWishlisted = isInWishlist(item.id)
 
   return (
     <div className="flex w-[302px] shrink-0 flex-col gap-5">
@@ -74,9 +102,14 @@ export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
           </button>
           <button
             type="button"
-            className="rounded-full border border-[#E5E5E5] bg-white p-[12px_24px] text-center font-semibold text-gray-900"
+            onClick={handleSaveToWishlist}
+            className={`rounded-full border p-[12px_24px] text-center font-semibold transition-all ${
+              alreadyWishlisted
+                ? "border-[#FFC736] bg-[#FFC736]/10 text-[#0D5CD7]"
+                : "border-[#E5E5E5] bg-white text-gray-900 hover:border-[#FFC736]"
+            }`}
           >
-            Save to Wishlist
+            {alreadyWishlisted ? "♥ Saved to Wishlist" : "Save to Wishlist"}
           </button>
         </div>
       </div>
