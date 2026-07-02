@@ -52,8 +52,8 @@ npm run build
 |-------|--------|
 | ESLint | ✅ 0 errors (2 warnings — known benign) |
 | TypeScript | ✅ Pass — no type errors |
-| Build | ✅ 20/20 pages generated |
-| App Router | `/`, `/sign-in`, `/sign-up`, `/categories`, `/products`, `/products/[id]`, `/brands`, `/catalogs`, `/dashboard`, `/dashboard/*` |
+| Build | ✅ 21/21 pages generated |
+| App Router | `/`, `/sign-in`, `/sign-up`, `/categories`, `/products`, `/products/[id]`, `/brands`, `/catalogs`, `/carts`, `/dashboard`, `/dashboard/*` |
 
 ## Project Timeline
 
@@ -332,6 +332,32 @@ app/brands/
 └── page.tsx                          # Customer-facing brand page (/brands) — grid + product count
 ```
 
+### Phase 21 — Shopping Cart & Checkout
+
+| Step | Detail |
+|------|--------|
+| Reference | `qkp93pbb-bwa-belanja/carts/` — cart page with zustand + checkout form + database integration |
+| Cart state | `hooks/use-cart.ts` — zustand store, `persist` ke `sessionStorage` (addProduct, increase/decreaseQuantity, removeProduct, clearCart) |
+| Cart page | `app/carts/page.tsx` — Server Component: LandingNavbar + breadcrumb + CartProducts + CheckoutForm |
+| Cart items | `_components/cart-products.tsx` — Client Component: product image, name, category, price, qty +/-, total, Remove button + empty state (Browse Products CTA) |
+| Checkout form | `_components/checkout-form.tsx` — Client Component: shipping address (name, address, city, postal code, phone, notes) + payment summary (subtotal, fees, grand total) |
+| Server action | `lib/actions.ts` — `storeOrder`: Zod validasi shipping → `prisma.$transaction` (Order + OrderDetail + OrderProduct) → redirect `/?checkout=success` |
+| Add to Cart | `price-info.tsx` — "Add to Cart" now wired: `useCart().addProduct()` + `router.push("/carts")` |
+| Fix | `useFormState` → `useActionState` (React 19 rename) |
+
+**New files:**
+```
+hooks/use-cart.ts                        # Zustand cart store
+app/carts/
+├── page.tsx                             # Server Component
+├── _components/
+│   ├── cart-products.tsx                # Cart item list + empty state
+│   └── checkout-form.tsx                # Shipping + payment + checkout
+└── lib/actions.ts                       # storeOrder server action
+```
+
+**New dependency:** `zustand` — lightweight state management (~1KB gzipped)
+
 ### Phase 20 — Multi-Image File Upload for Products
 
 | Step | Detail |
@@ -484,6 +510,7 @@ app/
 | Theme | next-themes |
 | Drawer | Vaul |
 | Icons | Lucide React |
+| Cart State | Zustand (sessionStorage persist) |
 
 ## Project Structure
 
@@ -555,6 +582,12 @@ app/
 │       ├── filter-section.tsx
 │       ├── filter-checkbox.tsx
 │       └── product-grid.tsx
+├── carts/
+│   ├── page.tsx                    # Shopping cart + checkout
+│   ├── _components/
+│   │   ├── cart-products.tsx        # Cart item list
+│   │   └── checkout-form.tsx        # Shipping + payment form
+│   └── lib/actions.ts               # storeOrder server action
 ├── _data/
 │   └── landing.ts                  # Prisma-backed data functions (categories, products, brands)
 components/
@@ -584,7 +617,8 @@ components/
 ├── order-form.tsx / order-list.tsx
 └── ui/                             # 22 shadcn v4 components (@base-ui/react)
 hooks/
-└── use-mobile.ts                   # Mobile breakpoint detection
+├── use-mobile.ts                   # Mobile breakpoint detection
+└── use-cart.ts                     # Zustand cart store
 lib/
 ├── auth.ts                         # Better Auth server config
 ├── auth-client.ts                  # Better Auth client (for OAuth + signOut)
@@ -626,6 +660,7 @@ Route groups don't affect the URL — they only organize layout inheritance.
 | `/products/[id]` | Product detail — breadcrumb, carousel, benefits, about + testimonials, PriceInfo sidebar, recommendations | Server (Dynamic) |
 | `/brands` | Brand listing — grid 5-col dari DB + product count + logo | Server (Dynamic) |
 | `/catalogs` | Full catalog — search, filter sidebar (price, stock, brand, category, location), product grid 3-col | Server (Dynamic) |
+| `/carts` | Shopping cart — item list, shipping form, checkout → Order + OrderDetail + OrderProduct | Server (Dynamic) |
 | `/dashboard` | Dashboard overview (charts + cards + table) | Server + Client |
 | `/dashboard/sign-in` | Admin sign-in (email/password + Google OAuth) | Server + Client |
 | `/dashboard/products` | Product catalog CRUD | Server + Client |

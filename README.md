@@ -13,6 +13,7 @@ Ecommerce admin dashboard + customer storefront built with **Next.js 16**, **Pri
 - **Charts**: Recharts
 - **Table**: @tanstack/react-table + @dnd-kit
 - **Toast**: Sonner
+- **Cart State**: Zustand (sessionStorage persist)
 - **Icons**: Lucide React
 
 ## Getting Started
@@ -141,6 +142,10 @@ app/
 ├── catalogs/
 │   ├── page.tsx                 # Full catalog with filters (/catalogs)
 │   └── _components/             # Search bar, filter sidebar, product grid
+├── carts/
+│   ├── page.tsx                 # Shopping cart + checkout (/carts)
+│   ├── _components/             # CartProducts, CheckoutForm
+│   └── lib/actions.ts           # storeOrder server action
 ├── _data/
 │   └── landing.ts               # Prisma-backed data functions (categories, products, brands)
 components/
@@ -177,7 +182,8 @@ lib/
 ├── rupiah-format.ts             # IDR currency formatter
 └── category-icons.ts            # Category name → SVG icon mapping
 hooks/
-└── use-mobile.ts                # Mobile detection hook
+├── use-mobile.ts                # Mobile detection hook
+└── use-cart.ts                  # Zustand cart store
 prisma/
 ├── schema.prisma                # Auth + ecommerce models (11 tables)
 ├── seed.ts                      # Superadmin seeder
@@ -201,6 +207,7 @@ public/
 | `/products/[id]` | Product detail — carousel, benefits, testimonials, PriceInfo sidebar, recommendations |
 | `/brands` | Brand listing — 5 brands from DB with product counts and logos |
 | `/catalogs` | Full catalog — search, filter sidebar (price, stock, brand, category, location), product grid |
+| `/carts` | Shopping cart — item list, shipping form, checkout → order created |
 
 ### Admin Dashboard
 
@@ -267,7 +274,7 @@ Two separate auth flows with isolated components, actions, and redirect targets:
 # Lint — 0 errors
 npm run lint
 
-# Build — 20/20 pages
+# Build — 21/21 pages
 npm run build
 ```
 
