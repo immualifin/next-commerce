@@ -18,6 +18,12 @@ interface WishlistState {
   isInWishlist: (id: string) => boolean
 }
 
+// SSR-safe: returns null during SSR, sessionStorage on client
+const storage = createJSONStorage<WishlistState>(() => {
+  if (typeof window === "undefined") return null as unknown as Storage
+  return sessionStorage
+})
+
 export const useWishlist = create<WishlistState>()(
   persist(
     (set, get) => ({
@@ -25,7 +31,7 @@ export const useWishlist = create<WishlistState>()(
 
       addItem: (item) => {
         const exists = get().items.find((i) => i.id === item.id)
-        if (exists) return // already saved
+        if (exists) return
         set({ items: [...get().items, item] })
       },
 
@@ -36,7 +42,7 @@ export const useWishlist = create<WishlistState>()(
     }),
     {
       name: "next-commerce-wishlist",
-      storage: createJSONStorage(() => sessionStorage),
+      storage,
     },
   ),
 )

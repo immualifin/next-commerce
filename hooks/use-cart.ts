@@ -21,6 +21,12 @@ interface CartState {
   clearCart: () => void
 }
 
+// SSR-safe: returns null during SSR, sessionStorage on client
+const storage = createJSONStorage<CartState>(() => {
+  if (typeof window === "undefined") return null as unknown as Storage
+  return sessionStorage
+})
+
 export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
@@ -62,7 +68,7 @@ export const useCart = create<CartState>()(
     }),
     {
       name: "next-commerce-cart",
-      storage: createJSONStorage(() => sessionStorage),
+      storage,
     },
   ),
 )
