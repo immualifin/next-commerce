@@ -13,7 +13,7 @@ interface LandingNavbarProps {
 }
 
 const NAV_LINKS = [
-  { label: "Shop", href: "/#products" },
+  { label: "Shop", href: "/catalogs" },
   { label: "Categories", href: "/#categories" },
   { label: "Brands", href: "/#brands" },
   { label: "Products", href: "/#products" },
