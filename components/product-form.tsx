@@ -1,6 +1,13 @@
 "use client"
 
-import { useActionState, useEffect, useState, useRef, type ChangeEvent } from "react"
+import {
+  useActionState,
+  useEffect,
+  useState,
+  useRef,
+  type ChangeEvent,
+  type FormEvent,
+} from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { XIcon, ImagePlusIcon } from "lucide-react"
@@ -22,7 +29,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { createProductAction, updateProductAction } from "@/app/(admin)/dashboard/products/actions"
+import {
+  createProductAction,
+  updateProductAction,
+} from "@/app/(admin)/dashboard/products/actions"
 
 type SelectOption = { id: string; name: string }
 
@@ -58,15 +68,18 @@ export function ProductForm({
     ? updateProductAction.bind(null, product!.id)
     : createProductAction
 
-  const [state, formAction, isPending] = useActionState(action, { errors: null, message: null })
+  const [state, formAction, isPending] = useActionState(action, {
+    errors: null,
+    message: null,
+  })
   const router = useRouter()
+  const formRef = useRef<HTMLFormElement>(null)
 
-  // ── Image state (client-side only) ──
+  // ── Image state ──
 
-  // SheetContent unmounts when closed, so useState initial values
-  // naturally reset each time the sheet opens (no effect needed).
   const [keptImages, setKeptImages] = useState<string[]>(product?.image ?? [])
   const [newPreviews, setNewPreviews] = useState<string[]>([])
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -86,21 +99,50 @@ export function ProductForm({
     const files = e.target.files
     if (!files) return
 
-    const previews: string[] = []
-    for (const file of Array.from(files)) {
-      previews.push(URL.createObjectURL(file))
+    const incoming = Array.from(files)
+    setPendingFiles((prev) => [...prev, ...incoming])
+
+    for (const file of incoming) {
+      setNewPreviews((prev) => [...prev, URL.createObjectURL(file)])
     }
-    setNewPreviews((prev) => [...prev, ...previews])
-    // Reset input so the same file can be re-selected
+
+    // Reset input so the same file(s) can be re-selected
     e.target.value = ""
   }
 
   function removeNewPreview(index: number) {
     setNewPreviews((prev) => prev.filter((_, i) => i !== index))
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
   function removeKeptImage(index: number) {
     setKeptImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  /**
+   * Intercept the form submission so we can inject the accumulated
+   * File objects that were cleared from the <input> on every selection.
+   */
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    const fd = new FormData(e.currentTarget)
+
+    // Remove any stale "images" entries from the hidden file input
+    fd.delete("images")
+
+    // Append accumulated files
+    for (const file of pendingFiles) {
+      fd.append("images", file)
+    }
+
+    // Append kept existing URLs
+    for (const url of keptImages) {
+      fd.append("existing", url)
+    }
+
+    // Dispatch via the useActionState action
+    formAction(fd)
   }
 
   const hasImages = keptImages.length > 0 || newPreviews.length > 0
@@ -117,14 +159,20 @@ export function ProductForm({
           </SheetDescription>
         </SheetHeader>
 
-        <form action={formAction} className="mt-6 flex flex-col gap-4">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className="mt-6 flex flex-col gap-4"
+        >
           {/* Name */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Name</Label>
             <Input
-              id="name" name="name"
+              id="name"
+              name="name"
               defaultValue={product?.name ?? ""}
-              required placeholder="Product name"
+              required
+              placeholder="Product name"
             />
             {state.errors?.name && (
               <p className="text-sm text-destructive">{state.errors.name[0]}</p>
@@ -135,14 +183,18 @@ export function ProductForm({
           <div className="flex flex-col gap-2">
             <Label htmlFor="description">Description</Label>
             <textarea
-              id="description" name="description"
+              id="description"
+              name="description"
               defaultValue={product?.description ?? ""}
-              required rows={3}
+              required
+              rows={3}
               placeholder="Product description..."
               className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
             {state.errors?.description && (
-              <p className="text-sm text-destructive">{state.errors.description[0]}</p>
+              <p className="text-sm text-destructive">
+                {state.errors.description[0]}
+              </p>
             )}
           </div>
 
@@ -150,9 +202,12 @@ export function ProductForm({
           <div className="flex flex-col gap-2">
             <Label htmlFor="price">Price</Label>
             <Input
-              id="price" name="price"
+              id="price"
+              name="price"
               defaultValue={product?.price?.toString() ?? ""}
-              required placeholder="100000" type="number"
+              required
+              placeholder="100000"
+              type="number"
             />
             {state.errors?.price && (
               <p className="text-sm text-destructive">{state.errors.price[0]}</p>
@@ -182,16 +237,14 @@ export function ProductForm({
           <div className="flex flex-col gap-2">
             <Label>Images</Label>
 
-            {/* Hidden inputs for existing images we're keeping */}
-            {keptImages.map((url) => (
-              <input key={url} type="hidden" name="existing" value={url} />
-            ))}
-
-            {/* Existing images (kept) */}
+            {/* Existing images (kept from DB) */}
             {keptImages.length > 0 && (
               <div className="grid grid-cols-3 gap-2">
                 {keptImages.map((url, i) => (
-                  <div key={url} className="group relative overflow-hidden rounded-lg border">
+                  <div
+                    key={url}
+                    className="group relative overflow-hidden rounded-lg border"
+                  >
                     <img
                       src={url}
                       alt={`img-${i}`}
@@ -213,7 +266,10 @@ export function ProductForm({
             {newPreviews.length > 0 && (
               <div className="grid grid-cols-3 gap-2">
                 {newPreviews.map((preview, i) => (
-                  <div key={preview} className="group relative overflow-hidden rounded-lg border">
+                  <div
+                    key={preview}
+                    className="group relative overflow-hidden rounded-lg border"
+                  >
                     <img
                       src={preview}
                       alt={`new-${i}`}
@@ -244,7 +300,6 @@ export function ProductForm({
             <input
               ref={fileInputRef}
               type="file"
-              name="images"
               multiple
               accept="image/*"
               onChange={handleFilesSelected}
@@ -266,13 +321,17 @@ export function ProductForm({
               <SelectContent>
                 <SelectGroup>
                   {brands.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name}
+                    </SelectItem>
                   ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
             {state.errors?.brandId && (
-              <p className="text-sm text-destructive">{state.errors.brandId[0]}</p>
+              <p className="text-sm text-destructive">
+                {state.errors.brandId[0]}
+              </p>
             )}
           </div>
 
@@ -286,13 +345,17 @@ export function ProductForm({
               <SelectContent>
                 <SelectGroup>
                   {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
                   ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
             {state.errors?.categoryId && (
-              <p className="text-sm text-destructive">{state.errors.categoryId[0]}</p>
+              <p className="text-sm text-destructive">
+                {state.errors.categoryId[0]}
+              </p>
             )}
           </div>
 
@@ -306,13 +369,17 @@ export function ProductForm({
               <SelectContent>
                 <SelectGroup>
                   {locations.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.name}
+                    </SelectItem>
                   ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
             {state.errors?.locationId && (
-              <p className="text-sm text-destructive">{state.errors.locationId[0]}</p>
+              <p className="text-sm text-destructive">
+                {state.errors.locationId[0]}
+              </p>
             )}
           </div>
 
