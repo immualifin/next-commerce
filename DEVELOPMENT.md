@@ -332,6 +332,30 @@ app/brands/
 └── page.tsx                          # Customer-facing brand page (/brands) — grid + product count
 ```
 
+### Phase 19 — Product Detail Page Redesign
+
+| Step | Detail |
+|------|--------|
+| Reference | `qkp93pbb-bwa-belanja/detail-product/[id]/` — full product detail with carousel, benefits, testimonials, PriceInfo sidebar, recommendations |
+| Page | `app/products/[id]/page.tsx` — full redesign, Server Component, Prisma query with `_count.orders` |
+| Navbar | Ganti inline navbar 70+ lines → `<LandingNavbar user={user} />` |
+| Title section | Breadcrumb (Shop / Browse / Details) + product name + dummy star rating + order count |
+| Carousel | `_components/carousel-images.tsx` — Client Component, horizontal scroll dengan CSS scroll-snap + prev/next buttons (tanpa Flickity dependency) |
+| Benefits bar | 4 benefit items: Include Official Warranty, Bonus Mac OS, 100% Original, Free Tax |
+| About & Testimonials | Deskripsi produk + 5 dummy testimonial cards (2-col grid, star rating, foto, nama, tanggal) |
+| PriceInfo | `_components/price-info.tsx` — Client Component, sidebar widget: "Brand New" label, harga (IDR), 5 feature checklist (tick-circle), Add to Cart (disabled jika belum login), Save to Wishlist, Buy as a Gift banner |
+| Brand/Category/Location | Info dengan link ke catalog filter (`/catalogs?brand=...`, `/catalogs?category=...`) |
+| Recommendations | `ListProducts` dengan title "Other Products You Might Need" + `isShowDetail={false}` |
+| Prisma query | Tambah `_count: { select: { orders: true } }` untuk order count |
+
+**New files:**
+```
+app/products/[id]/
+└── _components/
+    ├── carousel-images.tsx           # CSS scroll-snap horizontal carousel + prev/next
+    └── price-info.tsx                # Price sidebar widget (price, features, cart, wishlist, gift)
+```
+
 ### Phase 18 — Catalog Page with Advanced Filters
 
 | Step | Detail |
@@ -394,6 +418,7 @@ app/catalogs/
 | `/products` | Product listing — filter by `?category=<id>` & `?brand=<id>`, grid 5-col |
 | `/products/[id]` | Product detail — image, price (IDR), description, stock, brand, category, location |
 | `/brands` | Brand listing — grid 5 brand from DB with product count + logo |
+| `/catalogs` | Full catalog — search, filter sidebar, product grid |
 
 **Seed data seeded:**
 
@@ -492,7 +517,10 @@ app/
 ├── products/
 │   ├── page.tsx                    # Product listing — filterable by category/brand + CardProduct grid
 │   └── [id]/
-│       └── page.tsx                # Product detail — image, price, description, stock, brand, category, location
+│       ├── page.tsx                # Product detail — carousel, benefits, testimonials, PriceInfo, recommendations
+│       └── _components/
+│           ├── carousel-images.tsx # CSS scroll-snap horizontal carousel
+│           └── price-info.tsx      # Price sidebar widget
 ├── brands/
 │   └── page.tsx                    # Customer-facing brand page — DB query + product count
 ├── catalogs/
@@ -568,7 +596,7 @@ Route groups don't affect the URL — they only organize layout inheritance.
 | `/sign-up` | Customer sign-up (name/email/password + Google OAuth) | Server + Client |
 | `/categories` | Category listing — grid 8 kategori dari DB + product count + icon | Server (Dynamic) |
 | `/products` | Product listing — grid 5-col, filter by `?category=<id>` & `?brand=<id>`, filter chips | Server (Dynamic) |
-| `/products/[id]` | Product detail — image, price (IDR), description, stock badge, brand, category, location | Server (Dynamic) |
+| `/products/[id]` | Product detail — breadcrumb, carousel, benefits, about + testimonials, PriceInfo sidebar, recommendations | Server (Dynamic) |
 | `/brands` | Brand listing — grid 5-col dari DB + product count + logo | Server (Dynamic) |
 | `/catalogs` | Full catalog — search, filter sidebar (price, stock, brand, category, location), product grid 3-col | Server (Dynamic) |
 | `/dashboard` | Dashboard overview (charts + cards + table) | Server + Client |

@@ -134,7 +134,8 @@ app/
 ├── products/
 │   ├── page.tsx                 # Product listing with filters (/products)
 │   └── [id]/
-│       └── page.tsx             # Product detail (/products/[id])
+│       ├── page.tsx             # Product detail (/products/[id])
+│       └── _components/         # Carousel, PriceInfo widget
 ├── brands/
 │   └── page.tsx                 # Brand listing (/brands)
 ├── catalogs/
@@ -195,7 +196,7 @@ prisma/
 | `/sign-up` | Customer sign-up (name/email/password + Google OAuth) |
 | `/categories` | Category listing — 8 categories from DB with product counts and icons |
 | `/products` | Product listing — filterable by `?category=<id>` & `?brand=<id>`, 5-column grid |
-| `/products/[id]` | Product detail — image, price (IDR), description, stock, brand, category, location |
+| `/products/[id]` | Product detail — carousel, benefits, testimonials, PriceInfo sidebar, recommendations |
 | `/brands` | Brand listing — 5 brands from DB with product counts and logos |
 | `/catalogs` | Full catalog — search, filter sidebar (price, stock, brand, category, location), product grid |
 
