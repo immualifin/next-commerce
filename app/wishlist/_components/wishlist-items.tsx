@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Trash2Icon, HeartIcon } from "lucide-react"
 import { useWishlist } from "@/hooks/use-wishlist"
@@ -12,6 +13,11 @@ export default function WishlistItems() {
   const { items, removeItem } = useWishlist()
   const { addProduct } = useCart()
   const router = useRouter()
+
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  if (!mounted) return null
 
   if (items.length === 0) {
     return (

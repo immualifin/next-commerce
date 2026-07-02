@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useCart } from "@/hooks/use-cart"
 import { rupiahFormat } from "@/lib/rupiah-format"
 import Link from "next/link"
@@ -7,6 +8,12 @@ import Link from "next/link"
 export default function CartProducts() {
   const { products, increaseQuantity, decreaseQuantity, removeProduct } =
     useCart()
+
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  // Prevent hydration mismatch — sessionStorage only available client-side
+  if (!mounted) return null
 
   if (products.length === 0) {
     return (

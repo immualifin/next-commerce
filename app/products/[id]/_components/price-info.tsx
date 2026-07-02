@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { rupiahFormat } from "@/lib/rupiah-format"
@@ -29,6 +30,11 @@ export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
   const { addProduct } = useCart()
   const { addItem, isInWishlist } = useWishlist()
   const router = useRouter()
+
+  // Prevent hydration mismatch: wishlist state lives in sessionStorage
+  // which is only available on the client.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   function handleAddToCart() {
     addProduct({
@@ -65,7 +71,7 @@ export default function PriceInfo({ item, isLogin }: PriceInfoProps) {
     })
   }
 
-  const alreadyWishlisted = isInWishlist(item.id)
+  const alreadyWishlisted = mounted && isInWishlist(item.id)
 
   return (
     <div className="flex w-[302px] shrink-0 flex-col gap-5">
