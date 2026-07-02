@@ -52,7 +52,7 @@ export function LandingNavbar({ user }: LandingNavbarProps) {
   }
 
   return (
-    <nav className="container mx-auto flex max-w-[1130px] items-center justify-between rounded-3xl bg-[#0D5CD7] p-5">
+    <nav className="container relative z-40 mx-auto flex max-w-[1130px] items-center justify-between rounded-3xl bg-[#0D5CD7] p-5">
       {/* Logo */}
       <div className="flex shrink-0 items-center gap-2">
         <Link href="/" className="text-xl font-bold text-white">
@@ -88,7 +88,7 @@ export function LandingNavbar({ user }: LandingNavbarProps) {
         </Link>
 
         {user ? (
-          <div ref={dropdownRef} className="relative">
+          <div ref={dropdownRef} className="relative overflow-visible">
             <button
               type="button"
               onClick={() => setDropdownOpen((prev) => !prev)}
@@ -114,7 +114,7 @@ export function LandingNavbar({ user }: LandingNavbarProps) {
 
             {/* Dropdown */}
             {dropdownOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-xl border border-[#E5E5E5] bg-white shadow-lg">
+              <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-[#E5E5E5] bg-white shadow-lg">
                 <Link
                   href="/wishlist"
                   onClick={() => setDropdownOpen(false)}
