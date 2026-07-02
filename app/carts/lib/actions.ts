@@ -179,6 +179,9 @@ export async function storeOrder(
 
     redirect(invoiceUrl)
   } catch (e) {
+    // Next.js redirect() throws an internal error — must re-throw, not catch
+    if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e
+
     const message =
       e instanceof Error ? e.message : "Failed to place order. Please try again."
     console.error("[storeOrder]", e)
