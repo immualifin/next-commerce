@@ -8,6 +8,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar"
 import ListProducts from "@/components/landing/list-products"
 import CarouselImages from "./_components/carousel-images"
 import PriceInfo from "./_components/price-info"
+import TestimonialForm from "./_components/testimonial-form"
 
 // ── Auth helper ──
 
@@ -32,46 +33,6 @@ async function getCurrentUser() {
   }
 }
 
-// ── Dummy testimonials (static, matching reference) ──
-
-const TESTIMONIALS = [
-  {
-    name: "Angga Risky",
-    photo: "/assets/photos/p2.png",
-    date: "12 January 2028",
-    stars: 4,
-    text: "I do really love this product helped me to achieve my first million Lorem ipsum dolor sit amet.",
-  },
-  {
-    name: "Sarifuding",
-    photo: "/assets/photos/p4.png",
-    date: "12 January 2028",
-    stars: 3,
-    text: "I do really love this product helped me to achieve my first million Lorem ipsum dolor sit amet.",
-  },
-  {
-    name: "Ika Nurina",
-    photo: "/assets/photos/p3.png",
-    date: "12 January 2028",
-    stars: 5,
-    text: "I do really love this product helped me to achieve my first million Lorem ipsum dolor sit amet.",
-  },
-  {
-    name: "Sami Mami",
-    photo: "/assets/photos/p1.png",
-    date: "12 January 2028",
-    stars: 4,
-    text: "I do really love this product helped me to achieve my first million Lorem ipsum dolor sit amet.",
-  },
-  {
-    name: "Baronia",
-    photo: "/assets/photos/p2.png",
-    date: "12 January 2028",
-    stars: 3,
-    text: "I do really love this product helped me to achieve my first million Lorem ipsum dolor sit amet.",
-  },
-]
-
 // ── Page ──
 
 export default async function ProductDetailPage({
@@ -88,6 +49,10 @@ export default async function ProductDetailPage({
       category: true,
       brand: true,
       location: true,
+      testimonials: {
+        include: { user: { select: { name: true, image: true } } },
+        orderBy: { createdAt: "desc" },
+      },
       _count: { select: { orders: true } },
     },
   })
@@ -229,49 +194,64 @@ export default async function ProductDetailPage({
             <h3 className="font-semibold text-gray-900">
               Real Testimonials
             </h3>
-            <div className="grid grid-cols-2 gap-5">
-              {TESTIMONIALS.map((t) => (
-                <div
-                  key={t.name}
-                  className="testi-card flex h-fit flex-col gap-5 rounded-[20px] border border-[#E5E5E5] bg-white p-5"
-                >
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex shrink-0">
+            {product.testimonials.length > 0 ? (
+              <div className="grid grid-cols-2 gap-5">
+                {product.testimonials.map((t) => (
+                  <div
+                    key={t.id}
+                    className="testi-card flex h-fit flex-col gap-5 rounded-[20px] border border-[#E5E5E5] bg-white p-5"
+                  >
+                    <div className="flex">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="flex shrink-0">
+                          <img
+                            src={
+                              i < t.stars
+                                ? "/assets/icons/Star.svg"
+                                : "/assets/icons/Star-gray.svg"
+                            }
+                            alt="star"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="line-clamp-2 leading-[28px] text-gray-700 hover:line-clamp-none">
+                      {t.text}
+                    </p>
+                    <div className="flex items-center gap-[10px]">
+                      <div className="flex size-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#E5E5E5] p-1">
                         <img
-                          src={
-                            i < t.stars
-                              ? "/assets/icons/Star.svg"
-                              : "/assets/icons/Star-gray.svg"
-                          }
-                          alt="star"
+                          src={t.user.image ?? "/assets/photos/p1.png"}
+                          className="h-full w-full rounded-full object-cover"
+                          alt={t.user.name ?? "User"}
                         />
                       </div>
-                    ))}
-                  </div>
-                  <p className="line-clamp-2 leading-[28px] text-gray-700 hover:line-clamp-none">
-                    {t.text}
-                  </p>
-                  <div className="flex items-center gap-[10px]">
-                    <div className="flex size-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#E5E5E5] p-1">
-                      <img
-                        src={t.photo}
-                        className="h-full w-full rounded-full object-cover"
-                        alt={t.name}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-[2px]">
-                      <p className="text-sm font-semibold leading-[22px] text-gray-900">
-                        {t.name}
-                      </p>
-                      <p className="text-xs leading-[18px] text-[#6A7789]">
-                        {t.date}
-                      </p>
+                      <div className="flex flex-col gap-[2px]">
+                        <p className="text-sm font-semibold leading-[22px] text-gray-900">
+                          {t.user.name ?? "Anonymous"}
+                        </p>
+                        <p className="text-xs leading-[18px] text-[#6A7789]">
+                          {t.createdAt.toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-[#E5E5E5] bg-[#F9FAFB] p-10 text-center">
+                <p className="text-sm font-medium text-[#6A7789]">
+                  No testimonials yet. Be the first to share your experience!
+                </p>
+              </div>
+            )}
+
+            {/* Testimonial Input Form */}
+            <TestimonialForm productId={product.id} isLogin={!!user} />
           </div>
 
           {/* Brand & Location info */}

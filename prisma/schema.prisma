@@ -43,6 +43,7 @@ model User {
   sessions Session[]
   accounts Account[]
   orders   Order[]
+  testimonials Testimonial[]
 
   @@map("users")
 }
@@ -152,9 +153,25 @@ model Product {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
 
-  orders OrderProduct[]
+  orders       OrderProduct[]
+  testimonials Testimonial[]
 
   @@map("products")
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  productId String   @map("product_id")
+  userId    String   @map("user_id")
+  stars     Int
+  text      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@map("testimonials")
 }
 
 model Order {

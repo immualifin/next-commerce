@@ -407,6 +407,38 @@ nprogress          # 0.2.0 — removed, bug pada App Router
 @types/nprogress   # removed (dev)
 ```
 
+### Phase 23 — Product Testimonials / Reviews
+
+| Step | Detail |
+|------|--------|
+| Schema | Model `Testimonial` — `productId` (FK Product), `userId` (FK User), `stars` (Int 1-5), `text` (Text), timestamps. Relasi: Product `hasMany` Testimonial, User `hasMany` Testimonial |
+| Server action | `app/products/[id]/actions.ts` — `saveTestimonial`: auth check via `auth.api.getSession()` → Zod validation (stars 1-5, text 10-500 chars) → cek produk exists → prevent duplicate (satu user satu testimonial per produk) → Prisma create → revalidatePath |
+| Testimonial form | `_components/testimonial-form.tsx` — Client Component: `useActionState` + `<form action>`, interactive star rating (click-to-select, toggle deselect, hidden input `stars`), textarea, loading state. Gate: jika belum login tampilkan "Please sign in" CTA, jika sudah login tampilkan form |
+| Product detail | `app/products/[id]/page.tsx` — ganti `TESTIMONIALS` array statis → Prisma query `testimonials: { include: { user: { select: { name, image } } } }`. Empty state "No testimonials yet" jika belum ada. Render data: user avatar, name, rating stars, date (formatted), text dengan `line-clamp-2` + `hover:line-clamp-none` |
+| Seed data | 4 customer users (angga, sarifuding, ika, sami — password: `customer123`) + 12 testimonials across 7 products (iMac, iPhone, MacBook, AirPods Max, Galaxy S24, PS5, Switch OLED, Sony WH-1000XM5) |
+| Navigation fix | `useSearchParams()` di `NavigationProgress` dibungkus `<Suspense>` di root layout — Next.js 16 requirement: komponen yang pakai `useSearchParams()` harus punya Suspense boundary. TypeScript strict: `useRef` type eksplisit `null` / `undefined` |
+
+**New files:**
+```
+app/products/[id]/
+├── actions.ts                           # saveTestimonial server action
+└── _components/
+    └── testimonial-form.tsx             # Star rating + textarea + auth gate
+```
+
+**Changed files:**
+```
+app/
+├── layout.tsx                            # Wrap <NavigationProgress /> in <Suspense>
+└── products/[id]/
+    └── page.tsx                          # DB-driven testimonials + TestimonialForm
+components/
+└── navigation-progress.tsx               # TypeScript strict useRef types
+prisma/
+├── schema.prisma                         # Testimonial model + relations
+└── seed.ts                               # Customer users + 12 testimonials
+```
+
 ### Phase 20 — Multi-Image File Upload for Products
 
 | Step | Detail |
@@ -550,6 +582,7 @@ app/
 | ORM | Prisma 6 (`engine: "classic"`) |
 | Auth | Better Auth (email/password + Google OAuth) |
 | Password Hashing | scrypt (`node:crypto` native / `@noble/hashes` fallback) |
+| Testimonials | DB-driven reviews — star rating + text, one per user per product |
 | Validation | Zod 4 (server actions) |
 | UI | Tailwind CSS 4 |
 | Components | shadcn v4 (base-vega style, `@base-ui/react`) |
@@ -619,9 +652,11 @@ app/
 │   ├── page.tsx                    # Product listing — filterable by category/brand + CardProduct grid
 │   └── [id]/
 │       ├── page.tsx                # Product detail — carousel, benefits, testimonials, PriceInfo, recommendations
+│       ├── actions.ts              # saveTestimonial server action (Zod + auth + duplicate check)
 │       └── _components/
 │           ├── carousel-images.tsx # CSS scroll-snap horizontal carousel
-│           └── price-info.tsx      # Price sidebar widget
+│           ├── price-info.tsx      # Price sidebar widget
+│           └── testimonial-form.tsx # Star rating + textarea + auth gate
 ├── brands/
 │   └── page.tsx                    # Customer-facing brand page — DB query + product count
 ├── catalogs/
@@ -684,7 +719,7 @@ lib/
 ├── rupiah-format.ts               # IDR currency formatter
 └── category-icons.ts              # Category name → SVG icon mapping
 prisma/
-├── schema.prisma                   # Auth + ecommerce models (11 total)
+├── schema.prisma                   # Auth + ecommerce models (12 total)
 ├── seed.ts                         # Superadmin seeder
 ├── config.ts                       # Prisma 6 config
 └── migrations/
@@ -782,12 +817,14 @@ Creates:
 | Entity | Count | Details |
 |--------|-------|---------|
 | Superadmin | 1 | `admin@example.com` / `admin123456` |
+| Customer | 4 | `angga@example.com`, `sarifuding@example.com`, `ika@example.com`, `sami@example.com` / `customer123` |
 | Location | 3 | Jakarta Pusat, Bandung, Surabaya |
 | Brand | 5 | Apple, Samsung, Microsoft, Huawei, Nokia (dengan logo) |
 | Category | 8 | Electronics, Accessories, Gaming, Home & Living, Food & Beverage, Computers, Audio, Wearables |
 | Product | 22 | 10 original + 12 tambahan (15 ready + 7 preorder, mixed locations) |
+| Testimonial | 12 | 4.6★ average — across 7 products by 4 customers |
 
-Seed idempotent — aman dijalankan berkali-kali tanpa duplikasi (pakai `findFirst` + conditional `create`).
+Seed idempotent — aman dijalankan berkali-kali tanpa duplikasi (pakai `findFirst` + conditional `create` / `upsert`).
 
 ## Auth
 

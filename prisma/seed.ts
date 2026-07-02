@@ -312,6 +312,94 @@ for (const p of PRODUCTS) {
   p.locationName ??= "Jakarta Pusat";
 }
 
+// ── Testimonial seed data ──
+
+const CUSTOMERS = [
+  { name: "Angga Risky", email: "angga@example.com" },
+  { name: "Sarifuding", email: "sarifuding@example.com" },
+  { name: "Ika Nurina", email: "ika@example.com" },
+  { name: "Sami Mami", email: "sami@example.com" },
+];
+
+const TESTIMONIALS: {
+  productName: string
+  customerIdx: number
+  stars: number
+  text: string
+}[] = [
+  {
+    productName: 'iMac 24" M3 2024',
+    customerIdx: 0,
+    stars: 5,
+    text: "Absolutely stunning display and performance. The M3 chip handles everything I throw at it — design work, coding, and even light gaming. Best all-in-one I've ever owned.",
+  },
+  {
+    productName: 'iMac 24" M3 2024',
+    customerIdx: 2,
+    stars: 4,
+    text: "Beautiful machine with gorgeous colors. Setup took minutes. Only wish it had more ports, but overall very satisfied with the purchase.",
+  },
+  {
+    productName: "iPhone 15 Pro Max",
+    customerIdx: 0,
+    stars: 5,
+    text: "The camera is mind-blowing. Action button is surprisingly useful. Battery lasts me two full days. Worth every rupiah.",
+  },
+  {
+    productName: "iPhone 15 Pro Max",
+    customerIdx: 3,
+    stars: 4,
+    text: "Upgraded from iPhone 12 and the difference is night and day. USB-C finally! Titanium finish feels premium. Great phone overall.",
+  },
+  {
+    productName: "Samsung Galaxy S24 Ultra",
+    customerIdx: 1,
+    stars: 5,
+    text: "The AI features are game changers. Circle to search is addictive. Display is the best on any phone. Samsung really outdid themselves this year.",
+  },
+  {
+    productName: "Samsung Galaxy S24 Ultra",
+    customerIdx: 3,
+    stars: 4,
+    text: "S Pen is so handy for notes and sketches. Camera zoom is incredible at 100x. Battery could be better but fast charging makes up for it.",
+  },
+  {
+    productName: 'MacBook Pro 16" M3',
+    customerIdx: 2,
+    stars: 5,
+    text: "This laptop is a beast. Compiles code in seconds, renders video smoothly, and the battery lasts all day. The Liquid Retina XDR display is breathtaking.",
+  },
+  {
+    productName: 'MacBook Pro 16" M3',
+    customerIdx: 1,
+    stars: 5,
+    text: "Best investment for my freelance business. Keyboard is a joy to type on, speakers fill the room, and it stays cool and silent under heavy load.",
+  },
+  {
+    productName: "AirPods Max Sky Blue",
+    customerIdx: 3,
+    stars: 4,
+    text: "Noise cancellation is witchcraft — complete silence on flights. Sound quality is rich and detailed. A bit heavy for long sessions but the comfort is still great.",
+  },
+  {
+    productName: "Nintendo Switch OLED",
+    customerIdx: 1,
+    stars: 5,
+    text: "The OLED screen makes everything pop. Perfect for family game nights. Battery life is solid and the kickstand is finally usable. Highly recommended!",
+  },
+  {
+    productName: "PlayStation 5 Digital",
+    customerIdx: 0,
+    stars: 5,
+    text: "Load times are near instant with the SSD. DualSense controller haptics add so much immersion. Game library keeps getting better. A must-own console.",
+  },
+  {
+    productName: "Sony WH-1000XM5",
+    customerIdx: 2,
+    stars: 4,
+    text: "Super lightweight and comfortable for all-day wear. Microphone quality is much improved from the XM4. ANC is best in class. Would recommend.",
+  },
+];
 
 // ── Main ──
 
@@ -391,13 +479,13 @@ async function seed() {
 
   // ── Products ──
   console.log("\n🛒 Products:");
+  const productMap: Record<string, string> = {};
   for (const p of PRODUCTS) {
-    // Assign location: spread across Jakarta, Bandung, Surabaya
     const locName =
       p.locationName ??
       LOCATIONS[PRODUCTS.indexOf(p) % LOCATIONS.length].name;
 
-    await ensure(
+    const product = await ensure(
       p.name,
       () =>
         prisma.product.findFirst({
@@ -414,6 +502,59 @@ async function seed() {
             brandId: brandMap[p.brandName],
             categoryId: categoryMap[p.categoryName],
             locationId: locationMap[locName],
+          },
+        }),
+    );
+    productMap[product.name] = product.id;
+  }
+
+  // ── Customer users (for testimonials) ──
+  console.log("\n👥 Customer users:");
+  const customerIds: string[] = [];
+  for (const c of CUSTOMERS) {
+    const pw = await hashPassword("customer123");
+    const cust = await prisma.user.upsert({
+      where: { email: c.email },
+      update: {},
+      create: { email: c.email, name: c.name, rule: "customer", emailVerified: true },
+    });
+    await prisma.account.upsert({
+      where: {
+        providerId_accountId: { providerId: "credential", accountId: c.email },
+      },
+      update: { password: pw },
+      create: {
+        userId: cust.id,
+        accountId: c.email,
+        providerId: "credential",
+        password: pw,
+      },
+    });
+    customerIds.push(cust.id);
+    console.log(`  ✅ ${c.name} (${c.email}) — password: customer123`);
+  }
+
+  // ── Testimonials ──
+  console.log("\n💬 Testimonials:");
+  for (const t of TESTIMONIALS) {
+    const productId = productMap[t.productName];
+    if (!productId) {
+      console.log(`  ⚠️  Skipping — product "${t.productName}" not found`);
+      continue;
+    }
+    await ensure(
+      `${t.productName} — ${CUSTOMERS[t.customerIdx].name} (${t.stars}★)`,
+      () =>
+        prisma.testimonial.findFirst({
+          where: { productId, userId: customerIds[t.customerIdx] },
+        }),
+      () =>
+        prisma.testimonial.create({
+          data: {
+            productId,
+            userId: customerIds[t.customerIdx],
+            stars: t.stars,
+            text: t.text,
           },
         }),
     );

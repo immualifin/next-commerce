@@ -15,6 +15,7 @@ Ecommerce admin dashboard + customer storefront built with **Next.js 16**, **Pri
 - **Toast**: Sonner
 - **Cart State**: Zustand (sessionStorage persist)
 - **Payment**: Xendit Invoice API
+- **Testimonials**: DB-driven product reviews — star rating, auth-gated, one per user per product
 - **Icons**: Lucide React
 
 ## Getting Started
@@ -30,7 +31,7 @@ cp .env.example .env
 # Run database migration
 npx prisma migrate dev
 
-# (Optional) Seed database — creates superadmin + business data (categories, brands, products)
+# (Optional) Seed database — creates superadmin + business data (categories, brands, products, testimonials)
 npx tsx prisma/seed.ts
 
 # Start dev server
@@ -71,7 +72,7 @@ Open [http://localhost:3000](http://localhost:3000).
 npx prisma studio
 ```
 
-Opens Prisma Studio at [http://localhost:5555](http://localhost:5555) — a visual GUI to browse, edit, and filter all 11 tables.
+Opens Prisma Studio at [http://localhost:5555](http://localhost:5555) — a visual GUI to browse, edit, and filter all 12 tables.
 
 ## Soft Delete (Trash)
 
@@ -137,7 +138,8 @@ app/
 │   ├── page.tsx                 # Product listing with filters (/products)
 │   └── [id]/
 │       ├── page.tsx             # Product detail (/products/[id])
-│       └── _components/         # Carousel, PriceInfo widget
+│       ├── actions.ts           # saveTestimonial server action
+│       └── _components/         # Carousel, PriceInfo, TestimonialForm
 ├── brands/
 │   └── page.tsx                 # Brand listing (/brands)
 ├── catalogs/
@@ -191,7 +193,7 @@ hooks/
 ├── use-cart.ts                  # Zustand cart store
 └── use-wishlist.ts              # Zustand wishlist store
 prisma/
-├── schema.prisma                # Auth + ecommerce models (11 tables)
+├── schema.prisma                # Auth + ecommerce models (12 tables)
 ├── seed.ts                      # Superadmin seeder
 ├── config.ts
 └── migrations/

@@ -4,8 +4,8 @@ import { useEffect, useRef, useCallback } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 
 export default function NavigationProgress() {
-  const barRef = useRef<HTMLDivElement>(null)
-  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const barRef = useRef<HTMLDivElement | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
