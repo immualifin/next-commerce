@@ -51,7 +51,7 @@ export default function FilterCheckbox({
         onChange={handleChange}
         className="flex size-6 shrink-0 appearance-none rounded-md ring-1 ring-[#0D5CD7] checked:border-[3px] checked:border-solid checked:border-white checked:bg-[#0D5CD7]"
       />
-      <span>{label}</span>
+      <span className="text-gray-900">{label}</span>
     </label>
   )
 }

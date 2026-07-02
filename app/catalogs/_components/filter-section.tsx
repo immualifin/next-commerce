@@ -26,7 +26,7 @@ export default function FilterSection({
 
   return (
     <div className="flex flex-col gap-[14px]">
-      <p className="font-semibold leading-[22px]">{title}</p>
+      <p className="font-semibold leading-[22px] text-gray-900">{title}</p>
       {options.map((opt) => (
         <FilterCheckbox
           key={`${paramKey}-${opt.id}`}

@@ -47,7 +47,9 @@ export default function SearchBar() {
           <span className="text-sm text-[#6A7789]">/</span>
           <span className="text-sm text-black">Catalog</span>
         </div>
-        <h1 className="text-4xl font-bold leading-9">Our Product Catalog</h1>
+        <h1 className="text-4xl font-bold leading-9 text-gray-900">
+          Our Product Catalog
+        </h1>
       </div>
 
       {/* Search input */}

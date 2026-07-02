@@ -53,7 +53,7 @@ export default function FilterPrice() {
 
   return (
     <div className="flex flex-col gap-[14px]">
-      <p className="font-semibold leading-[22px]">Price Range</p>
+      <p className="font-semibold leading-[22px] text-gray-900">Price Range</p>
       <div className="flex w-full items-center gap-[10px] rounded-full border border-[#E5E5E5] bg-white p-[12px_20px] transition-all duration-300 focus-within:ring-2 focus-within:ring-[#FFC736]">
         <div className="flex shrink-0">
           <img src="/assets/icons/dollar-circle.svg" alt="price" />

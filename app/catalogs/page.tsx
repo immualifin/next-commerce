@@ -191,13 +191,17 @@ export default async function CatalogsPage({
         <LandingNavbar user={user} />
       </header>
 
-      <SearchBar />
+      <div className="bg-white">
+        <SearchBar />
+      </div>
 
       {/* ── Content: Filters + Products ── */}
       <div className="container mx-auto mt-[50px] flex max-w-[1130px] gap-[30px] pb-[100px]">
         {/* Filter Sidebar */}
         <aside className="flex h-fit flex-1 flex-col gap-5 rounded-[30px] border border-[#E5E5E5] bg-white p-[30px]">
-          <h2 className="text-2xl font-bold leading-[34px]">Filters</h2>
+          <h2 className="text-2xl font-bold leading-[34px] text-gray-900">
+            Filters
+          </h2>
 
           <FilterPrice />
 
@@ -236,7 +240,9 @@ export default async function CatalogsPage({
 
         {/* Product Grid */}
         <div className="flex w-[780px] h-fit flex-col gap-[30px] rounded-[30px] border border-[#E5E5E5] bg-white p-[30px]">
-          <h2 className="text-2xl font-bold leading-[34px]">Products</h2>
+          <h2 className="text-2xl font-bold leading-[34px] text-gray-900">
+            Products
+          </h2>
           <ProductGrid products={serialized} hasFilters={hasFilters} />
         </div>
       </div>
