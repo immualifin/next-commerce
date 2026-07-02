@@ -1,4 +1,5 @@
 import { type ReactNode } from "react"
+import Link from "next/link"
 import { getProducts } from "@/app/_data/landing"
 import CardProduct from "./card-product"
 
@@ -20,12 +21,12 @@ export default async function ListProducts({
           {title}
         </h2>
         {isShowDetail && (
-          <a
+          <Link
             href="/products"
             className="rounded-full border border-[#E5E5E5] px-6 py-3 font-semibold text-gray-700 transition-all hover:border-[#0D5CD7] hover:text-[#0D5CD7]"
           >
             Explore All
-          </a>
+          </Link>
         )}
       </div>
       <div className="grid grid-cols-5 gap-[30px]">

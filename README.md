@@ -137,6 +137,9 @@ app/
 │       └── page.tsx             # Product detail (/products/[id])
 ├── brands/
 │   └── page.tsx                 # Brand listing (/brands)
+├── catalogs/
+│   ├── page.tsx                 # Full catalog with filters (/catalogs)
+│   └── _components/             # Search bar, filter sidebar, product grid
 ├── _data/
 │   └── landing.ts               # Prisma-backed data functions (categories, products, brands)
 components/
@@ -194,6 +197,7 @@ prisma/
 | `/products` | Product listing — filterable by `?category=<id>` & `?brand=<id>`, 5-column grid |
 | `/products/[id]` | Product detail — image, price (IDR), description, stock, brand, category, location |
 | `/brands` | Brand listing — 5 brands from DB with product counts and logos |
+| `/catalogs` | Full catalog — search, filter sidebar (price, stock, brand, category, location), product grid |
 
 ### Admin Dashboard
 
@@ -260,7 +264,7 @@ Two separate auth flows with isolated components, actions, and redirect targets:
 # Lint — 0 errors
 npm run lint
 
-# Build — 19/19 pages
+# Build — 20/20 pages
 npm run build
 ```
 

@@ -21,7 +21,11 @@ async function ensure<T>(
 
 // ── Seed Data ──
 
-const LOCATION = { name: "Jakarta Pusat" };
+const LOCATIONS = [
+  { name: "Jakarta Pusat" },
+  { name: "Bandung" },
+  { name: "Surabaya" },
+];
 
 const BRANDS = [
   { name: "Apple", logo: "/assets/logos/apple.svg" },
@@ -147,7 +151,167 @@ const PRODUCTS = [
     categoryName: "Audio",
     stock: "ready" as const,
   },
-];
+  // ── Additional products (Phase 17 — catalog seeding) ──
+  {
+    name: "Samsung Galaxy Tab S9 Ultra",
+    description: "Samsung Galaxy Tab S9 Ultra 14.6-inch",
+    price: 15_999_000,
+    image: [
+      "/assets/thumbnails/ea49dfcfcaa4513d799050c989d2f177.png",
+    ],
+    brandName: "Samsung",
+    categoryName: "Electronics",
+    stock: "ready" as const,
+    locationName: "Bandung",
+  },
+  {
+    name: "Samsung Galaxy Watch 6 Classic",
+    description: "Samsung Galaxy Watch 6 Classic 47mm",
+    price: 5_499_000,
+    image: [
+      "/assets/thumbnails/color_back_green__buxxfjccqjzm_large_2x-Photoroom 1.png",
+    ],
+    brandName: "Samsung",
+    categoryName: "Wearables",
+    stock: "preorder" as const,
+    locationName: "Bandung",
+  },
+  {
+    name: "Microsoft Surface Pro 10",
+    description: "Microsoft Surface Pro 10 — 2-in-1 tablet & laptop",
+    price: 16_999_000,
+    image: [
+      "/assets/thumbnails/246c3a1bf608fed816e2e038784fa995.png",
+    ],
+    brandName: "Microsoft",
+    categoryName: "Computers",
+    stock: "preorder" as const,
+    locationName: "Surabaya",
+  },
+  {
+    name: "Xbox Series X",
+    description: "Microsoft Xbox Series X — 1TB SSD",
+    price: 8_199_000,
+    image: [
+      "/assets/thumbnails/ea49dfcfcaa4513d799050c989d2f177.png",
+    ],
+    brandName: "Microsoft",
+    categoryName: "Gaming",
+    stock: "ready" as const,
+    locationName: "Surabaya",
+  },
+  {
+    name: "Huawei MatePad Pro 13.2",
+    description: "Huawei MatePad Pro 13.2-inch OLED",
+    price: 9_999_000,
+    image: [
+      "/assets/thumbnails/imac24-digitalmat-gallery-1-202310-Photoroom 1.png",
+    ],
+    brandName: "Huawei",
+    categoryName: "Electronics",
+    stock: "preorder" as const,
+    locationName: "Bandung",
+  },
+  {
+    name: "Huawei Watch GT 4",
+    description: "Huawei Watch GT 4 — 46mm smartwatch",
+    price: 3_299_000,
+    image: [
+      "/assets/thumbnails/color_back_green__buxxfjccqjzm_large_2x-Photoroom 1.png",
+    ],
+    brandName: "Huawei",
+    categoryName: "Wearables",
+    stock: "ready" as const,
+    locationName: "Bandung",
+  },
+  {
+    name: "Nokia XR21 5G",
+    description: "Nokia XR21 5G — rugged smartphone",
+    price: 5_999_000,
+    image: [
+      "/assets/thumbnails/iphone15pro-digitalmat-gallery-3-202309-Photoroom 1.png",
+    ],
+    brandName: "Nokia",
+    categoryName: "Electronics",
+    stock: "preorder" as const,
+    locationName: "Surabaya",
+  },
+  {
+    name: "Nokia T21 Tablet",
+    description: "Nokia T21 10.36-inch tablet",
+    price: 2_999_000,
+    image: [
+      "/assets/thumbnails/ea49dfcfcaa4513d799050c989d2f177.png",
+    ],
+    brandName: "Nokia",
+    categoryName: "Electronics",
+    stock: "ready" as const,
+    locationName: "Surabaya",
+  },
+  {
+    name: "SteelSeries Arctis Nova Pro",
+    description: "SteelSeries Arctis Nova Pro — wireless gaming headset",
+    price: 3_799_000,
+    image: [
+      "/assets/thumbnails/airpods-max-select-skyblue-202011-Photoroom 1.png",
+    ],
+    brandName: "Microsoft",
+    categoryName: "Audio",
+    stock: "ready" as const,
+    locationName: "Bandung",
+  },
+  {
+    name: "Samsung Galaxy Buds 3 Pro",
+    description: "Samsung Galaxy Buds 3 Pro — noise cancelling earbuds",
+    price: 2_799_000,
+    image: [
+      "/assets/thumbnails/airpods-max-select-skyblue-202011-Photoroom 1.png",
+    ],
+    brandName: "Samsung",
+    categoryName: "Audio",
+    stock: "preorder" as const,
+    locationName: "Surabaya",
+  },
+  {
+    name: "Logitech MX Master 3S",
+    description: "Logitech MX Master 3S — wireless productivity mouse",
+    price: 1_499_000,
+    image: [
+      "/assets/thumbnails/246c3a1bf608fed816e2e038784fa995.png",
+    ],
+    brandName: "Nokia",
+    categoryName: "Accessories",
+    stock: "ready" as const,
+    locationName: "Bandung",
+  },
+  {
+    name: 'Dell UltraSharp U2723QE 27" 4K',
+    description: "Dell UltraSharp 27-inch 4K USB-C Hub Monitor",
+    price: 9_299_000,
+    image: [
+      "/assets/thumbnails/imac24-digitalmat-gallery-1-202310-Photoroom 1.png",
+    ],
+    brandName: "Microsoft",
+    categoryName: "Computers",
+    stock: "preorder" as const,
+    locationName: "Surabaya",
+  },
+] as {
+  name: string
+  description: string
+  price: number
+  image: string[]
+  brandName: string
+  categoryName: string
+  stock: "ready" | "preorder"
+  locationName?: string
+}[];
+
+// Add locationName to existing products (all Jakarta Pusat)
+for (const p of PRODUCTS) {
+  p.locationName ??= "Jakarta Pusat";
+}
+
 
 // ── Main ──
 
@@ -182,16 +346,20 @@ async function seed() {
   console.log(`  ✅ Password: ${password}`);
   console.log(`  ✅ Role:     superadmin\n`);
 
-  // ── Location ──
-  console.log("📍 Location:");
-  const location = await ensure(
-    LOCATION.name,
-    () =>
-      prisma.location.findFirst({
-        where: { name: LOCATION.name, deletedAt: null },
-      }),
-    () => prisma.location.create({ data: LOCATION }),
-  );
+  // ── Locations ──
+  console.log("📍 Locations:");
+  const locationMap: Record<string, string> = {};
+  for (const loc of LOCATIONS) {
+    const location = await ensure(
+      loc.name,
+      () =>
+        prisma.location.findFirst({
+          where: { name: loc.name, deletedAt: null },
+        }),
+      () => prisma.location.create({ data: loc }),
+    );
+    locationMap[location.name] = location.id;
+  }
 
   // ── Brands ──
   console.log("\n🏷️  Brands:");
@@ -224,6 +392,11 @@ async function seed() {
   // ── Products ──
   console.log("\n🛒 Products:");
   for (const p of PRODUCTS) {
+    // Assign location: spread across Jakarta, Bandung, Surabaya
+    const locName =
+      p.locationName ??
+      LOCATIONS[PRODUCTS.indexOf(p) % LOCATIONS.length].name;
+
     await ensure(
       p.name,
       () =>
@@ -240,7 +413,7 @@ async function seed() {
             stock: p.stock,
             brandId: brandMap[p.brandName],
             categoryId: categoryMap[p.categoryName],
-            locationId: location.id,
+            locationId: locationMap[locName],
           },
         }),
     );

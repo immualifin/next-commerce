@@ -52,8 +52,8 @@ npm run build
 |-------|--------|
 | ESLint | ✅ 0 errors (2 warnings — known benign) |
 | TypeScript | ✅ Pass — no type errors |
-| Build | ✅ 19/19 pages generated |
-| App Router | `/`, `/sign-in`, `/sign-up`, `/categories`, `/products`, `/products/[id]`, `/brands`, `/dashboard`, `/dashboard/*` |
+| Build | ✅ 20/20 pages generated |
+| App Router | `/`, `/sign-in`, `/sign-up`, `/categories`, `/products`, `/products/[id]`, `/brands`, `/catalogs`, `/dashboard`, `/dashboard/*` |
 
 ## Project Timeline
 
@@ -332,6 +332,46 @@ app/brands/
 └── page.tsx                          # Customer-facing brand page (/brands) — grid + product count
 ```
 
+### Phase 18 — Catalog Page with Advanced Filters
+
+| Step | Detail |
+|------|--------|
+| Reference | `qkp93pbb-bwa-belanja/catalogs/` — full catalog with search, price range, stock, brand, category, location filters |
+| Architecture | URL `searchParams` sebagai source of truth (bukan zustand + react-query seperti reference) — konsisten dengan pattern `/products` |
+| Page | `app/catalogs/page.tsx` — Server Component, baca searchParams, Prisma where clause dinamis, fetch products + filter options |
+| Search bar | `_components/search-bar.tsx` — Client Component, debounced input (1500ms), update `?search=`, breadcrumb Shop/Browse/Catalog |
+| Filter price | `_components/filter-price.tsx` — Client Component, min/max inputs + dollar-circle icon, debounced update `?minPrice=&maxPrice=` |
+| Filter section | `_components/filter-section.tsx` — Client Component, generic checkbox group (title + paramKey + options), passes ke `FilterCheckbox` |
+| Filter checkbox | `_components/filter-checkbox.tsx` — Client Component, baca `useSearchParams().getAll()` untuk checked state, toggle append/delete URL param |
+| Product grid | `_components/product-grid.tsx` — Client Component, 3-column grid `CardProduct`, empty state when no products match |
+| Layout | Reference match: header (LandingNavbar bg-[#EFF3FA]), search bar, sidebar filter + product area side-by-side, footer |
+| Seed expansion | 2 lokasi baru (Bandung, Surabaya), 12 produk baru — total 22 produk dari 5 brand, 8 kategori, 3 lokasi |
+| Fix | `list-products.tsx` — ganti `<a href="/products">` → `<Link>` (lint error pre-existing) |
+
+**New files:**
+```
+app/catalogs/
+├── page.tsx                          # Server Component — Prisma query with dynamic where clause
+└── _components/
+    ├── search-bar.tsx                # Debounced search input → URL
+    ├── filter-price.tsx              # Min/max price inputs → URL
+    ├── filter-section.tsx            # Generic checkbox group wrapper
+    ├── filter-checkbox.tsx           # Single checkbox (useSearchParams toggle)
+    └── product-grid.tsx              # 3-col CardProduct grid + empty state
+```
+
+**Filter URL pattern:**
+```
+/catalogs?search=iphone&minPrice=1000000&maxPrice=20000000&stock=ready&stock=preorder&brand=cuid1&category=cuid2&location=cuid3
+```
+
+**Updated seed data:**
+
+| Entity | Count (was → now) |
+|--------|--------------------|
+| Location | 1 → 3 (Jakarta Pusat, Bandung, Surabaya) |
+| Product | 10 → 22 (varied stock: 15 ready + 7 preorder) |
+
 ### Phase 16 — Customer-Facing Pages & Database Integration
 
 | Step | Detail |
@@ -455,6 +495,14 @@ app/
 │       └── page.tsx                # Product detail — image, price, description, stock, brand, category, location
 ├── brands/
 │   └── page.tsx                    # Customer-facing brand page — DB query + product count
+├── catalogs/
+│   ├── page.tsx                    # Full catalog — advanced filters (search, price, stock, brand, category, location)
+│   └── _components/
+│       ├── search-bar.tsx
+│       ├── filter-price.tsx
+│       ├── filter-section.tsx
+│       ├── filter-checkbox.tsx
+│       └── product-grid.tsx
 ├── _data/
 │   └── landing.ts                  # Prisma-backed data functions (categories, products, brands)
 components/
@@ -522,6 +570,7 @@ Route groups don't affect the URL — they only organize layout inheritance.
 | `/products` | Product listing — grid 5-col, filter by `?category=<id>` & `?brand=<id>`, filter chips | Server (Dynamic) |
 | `/products/[id]` | Product detail — image, price (IDR), description, stock badge, brand, category, location | Server (Dynamic) |
 | `/brands` | Brand listing — grid 5-col dari DB + product count + logo | Server (Dynamic) |
+| `/catalogs` | Full catalog — search, filter sidebar (price, stock, brand, category, location), product grid 3-col | Server (Dynamic) |
 | `/dashboard` | Dashboard overview (charts + cards + table) | Server + Client |
 | `/dashboard/sign-in` | Admin sign-in (email/password + Google OAuth) | Server + Client |
 | `/dashboard/products` | Product catalog CRUD | Server + Client |
@@ -587,10 +636,10 @@ Creates:
 | Entity | Count | Details |
 |--------|-------|---------|
 | Superadmin | 1 | `admin@example.com` / `admin123456` |
-| Location | 1 | Jakarta Pusat |
+| Location | 3 | Jakarta Pusat, Bandung, Surabaya |
 | Brand | 5 | Apple, Samsung, Microsoft, Huawei, Nokia (dengan logo) |
 | Category | 8 | Electronics, Accessories, Gaming, Home & Living, Food & Beverage, Computers, Audio, Wearables |
-| Product | 10 | iMac, iPhone, AirPods Max, MacBook Pro, iPad Air, Apple Watch, Galaxy S24, PS5, Switch OLED, Sony WH-1000XM5 |
+| Product | 22 | 10 original + 12 tambahan (15 ready + 7 preorder, mixed locations) |
 
 Seed idempotent — aman dijalankan berkali-kali tanpa duplikasi (pakai `findFirst` + conditional `create`).
 
